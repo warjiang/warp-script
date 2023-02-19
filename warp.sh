@@ -738,7 +738,7 @@ wpgocheck(){
         systemctl start warp-go
         systemctl enable warp-go >/dev/null 2>&1
         checkwarp
-        sleep 3
+        sleep 5
         if [[ $wpv4 =~ on|plus ]] || [[ $wpv6 =~ on|plus ]]; then
             green "WARP-GO 已启动成功！"
             break
