@@ -137,7 +137,11 @@ checkmtu(){
         fi
     done
     MTU=$((${MTUy} - 80))
-    sed -i "s/MTU.*/MTU = $MTU/g" wgcf-profile.conf
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        sed -i "s/MTU.*/MTU = $MTU/g" wgcf-profile.conf
+    else
+        sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+    fi
     green "MTU 最佳值=$MTU 已设置完毕"
 }
 
@@ -709,6 +713,7 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
+    checkmtu
     wpgoconf
     wpgocheck
     checkv4v6
