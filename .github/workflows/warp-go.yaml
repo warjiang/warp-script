@@ -20,7 +20,7 @@ jobs:
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           git config --global user.email "misakablog@protonmail.com"
           git config --global user.name "Misaka-blog"
-          git clone git@github.com:Misaka-blog/cfwarp-script.git
+          git clone git@github.com:Misaka-blog/warp.git
       - name: Check and fetch warp-go latest version
         run: |
           rm -f cfwarp-script/files/warp-go/warp-go-latest-linux-amd64 cfwarp-script/files/warp-go/warp-go-latest-linux-arm64 cfwarp-script/files/warp-go/warp-go-latest-linux-s390x cfwarp-script/files/warp-go/warpgo-fetchlog.txt
