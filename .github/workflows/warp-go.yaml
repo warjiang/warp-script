@@ -45,7 +45,7 @@ jobs:
           EOF
       - name: Upload to GitHub
         run: |
-          cd cfwarp-script
+          cd warp
           git add .
           git commit -m "CI: Auto fetch warp-go at $(date +"%m-%d %H:%M")"
           git push
