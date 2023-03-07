@@ -1701,6 +1701,7 @@ menu(){
         6 ) uninstallcli ;;
         7 ) installWireProxy ;;
         8 ) uninstallWireProxy ;;
+        9 ) warpport ;;
         10 ) warpswitch ;;
         11 ) wgprofile ;;
         12 ) warptraffic ;;
