@@ -893,6 +893,15 @@ warpcli_changeport() {
     fi
 }
 
+startcli(){
+    warp-cli --accept-tos connect >/dev/null 2>&1
+    warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+}
+
+stopcli(){
+    warp-cli --accept-tos disconnect >/dev/null 2>&1
+}
+
 uninstallcli(){
     warp-cli --accept-tos disconnect >/dev/null 2>&1
     warp-cli --accept-tos disable-always-on >/dev/null 2>&1
@@ -1073,6 +1082,17 @@ uninstallWireProxy(){
     green "WireProxy-WARP代理模式已彻底卸载成功!"
 }
 
+warpport(){
+    yellow "请选择需要修改端口的WARP客户端："
+    green "1. WARP-Cli（默认）"
+    green "2. WireProxy-WARP"
+    read -rp "请输入选项 [1-2]：" clientInput
+    case $clientInput in
+        2) wireproxy_changeport ;;
+        *) warpcli_changeport ;;
+    esac
+}
+
 warpswitch(){
     echo ""
     yellow "请选择你需要的操作："
@@ -1098,6 +1118,12 @@ warpswitch(){
         4 ) startwpgo ;;
         5 ) stopwpgo ;;
         6 ) stopwpgo && startwpgo ;;
+        7 ) startcli ;;
+        8 ) stopcli ;;
+        9 ) stopcli && startcli ;;
+        10 ) startWireProxy ;;
+        11 ) stopWireProxy ;;
+        12 ) stopWireProxy && startWireProxy ;;
         * ) exit 1 ;;
     esac
 }
