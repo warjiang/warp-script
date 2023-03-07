@@ -910,7 +910,7 @@ installWireProxy(){
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
     fi
     
-    wget -N https://gitlab.com/misakablog/warp-script/-/raw/main/files/wireproxy/wireproxy-$(archAffix) -O /usr/local/bin/wireproxy
+    wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wireproxy/wireproxy-latest-linux-$(archAffix) -O /usr/local/bin/wireproxy
     chmod +x /usr/local/bin/wireproxy
     
     initwgcf
