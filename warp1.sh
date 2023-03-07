@@ -1053,6 +1053,16 @@ wireproxy_changeport(){
     ipinfo
 }
 
+startWireProxy(){
+    systemctl start wireproxy-warp
+    systemctl enable wireproxy-warp
+}
+
+stopWireProxy(){
+    systemctl stop wireproxy-warp
+    systemctl disable wireproxy-warp
+}
+
 uninstallWireProxy(){
     systemctl stop wireproxy-warp
     systemctl disable wireproxy-warp
@@ -1073,8 +1083,14 @@ warpswitch(){
     echo -e " ${GREEN}4.${PLAIN} 启动 WARP-GO"
     echo -e " ${GREEN}5.${PLAIN} 关闭 WARP-GO"
     echo -e " ${GREEN}6.${PLAIN} 重启 WARP-GO"
+    echo -e " ${GREEN}7.${PLAIN} 启动 WARP-Cli"
+    echo -e " ${GREEN}8.${PLAIN} 关闭 WARP-Cli"
+    echo -e " ${GREEN}9.${PLAIN} 重启 WARP-Cli"
+    echo -e " ${GREEN}10.${PLAIN} 启动 WireProxy-WARP"
+    echo -e " ${GREEN}11.${PLAIN} 关闭 WireProxy-WARP"
+    echo -e " ${GREEN}12.${PLAIN} 重启 WireProxy-WARP"
     echo ""
-    read -rp "请输入选项 [0-3]: " switchInput
+    read -rp "请输入选项 [0-12]: " switchInput
     case $switchInput in
         1 ) startwgcf ;;
         2 ) stopwgcf ;;
@@ -1649,7 +1665,7 @@ menu(){
     echo ""
     ipinfo
     echo ""
-    read -rp "请输入选项 [0-8]: " menuInput
+    read -rp "请输入选项 [0-13]: " menuInput
     case $menuInput in
         1 ) infowgcf ;;
         2 ) unstwgcf ;;
