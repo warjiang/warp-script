@@ -1522,8 +1522,8 @@ warpaccount(){
 ipinfo(){
     d4="${RED}未设置${PLAIN}"
     d6="${RED}未设置${PLAIN}"
-    c4=$(curl -sm8 ipget.net/country?ip=$ipv4)
-    c6=$(curl -sm8 ipget.net/country?ip=$ipv6)
+    c4=$(curl -s4m8 ip.p3terx.com | sed -n 2p | awk -F "/ " '{print $2}')
+    c6=$(curl -s6m8 ip.p3terx.com | sed -n 2p | awk -F "/ " '{print $2}')
     n4=$(nf | sed -n 3p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
     n6=$(nf | sed -n 7p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
 
@@ -1536,14 +1536,14 @@ ipinfo(){
     if [[ -n $s5p ]]; then
         s5s=$(curl -sx socks5h://localhost:$s5p https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
         s5i=$(curl -sx socks5h://localhost:$s5p ip.p3terx.com -k --connect-timeout 8 | sed -n 1p)
-        s5c=$(curl -sm8 ipget.net/country?ip=$s5i)
+        s5c=$(curl -sx socks5h://localhost:$s5p ip.p3terx.com -k --connect-timeout 8 | sed -n 2p | awk -F "/ " '{print $2}')
         s5n=$(nf -proxy socks5://127.0.0.1:$s5p | sed -n 3p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
     fi
     if [[ -n $w5p ]]; then
         w5d="${RED}未设置${PLAIN}"
         w5s=$(curl -sx socks5h://localhost:$w5p https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
         w5i=$(curl -sx socks5h://localhost:$w5p ip.p3terx.com -k --connect-timeout 8 | sed -n 1p)
-        w5c=$(curl -sm8 ipget.net/country?ip=$w5i)
+        w5c=$(curl -sx socks5h://localhost:$w5p ip.p3terx.com -k --connect-timeout 8 | sed -n 2p | awk -F "/ " '{print $2}')
         w5n=$(nf -proxy socks5://127.0.0.1:$w5p | sed -n 3p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
     fi
 
