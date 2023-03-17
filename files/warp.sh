@@ -55,8 +55,8 @@ TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
 wg1="sed -i '/0\.0\.0\.0\/0/d' /etc/wireguard/wgcf.conf"
 wg2="sed -i '/\:\:\/0/d' /etc/wireguard/wgcf.conf"
 # Wgcf Endpoint
-wg3="sed -i 's/engage.cloudflareclient.com:2408/$best_endpoint/g' /etc/wireguard/wgcf.conf"
-wg4="sed -i 's/engage.cloudflareclient.com:2408/[2606:4700:d0::a29f:c003]:1701/g' /etc/wireguard/wgcf.conf"
+wg3='sed -i "s/engage.*/$best_endpoint/g" /etc/wireguard/wgcf.conf'
+wg4="sed -i 's/engage.*/[2606:4700:d0::a29f:c003]:1701/g' /etc/wireguard/wgcf.conf"
 # Wgcf DNS Servers
 wg5="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844/g' /etc/wireguard/wgcf.conf"
 wg6="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
