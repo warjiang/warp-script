@@ -418,6 +418,7 @@ installwgcf(){
     initwgcf
     wgcfreg
     checkmtu
+    checkendpoint
 
     if [[ ! -d "/etc/wireguard" ]]; then
         mkdir /etc/wireguard
@@ -727,6 +728,7 @@ WantedBy=multi-user.target
 EOF
 
     checkmtu
+    checkendpoint
     wpgoconf
     wpgocheck
     checkv4v6
