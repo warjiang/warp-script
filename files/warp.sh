@@ -142,16 +142,16 @@ checkendpoint(){
     wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix)
     chmod +x warp-linux-$(archAffix)
     ./warp-linux-$(archAffix)
-    best_endpoint=$(cat result.csv | sed -n 2p | awk -F "," '{print $1}')
+    bestendpoint=$(cat result.csv | sed -n 2p | awk -F "," '{print $1}')
     rm -f ip.txt result.csv warp-linux-$(archAffix)
-    green "最优 IPv4 Endpoint IP=$best_endpoint 已设置完毕"
+    green "最优 IPv4 Endpoint IP=$bestendpoint 已设置完毕"
 }
 
 wg1="sed -i '/0\.0\.0\.0\/0/d' /etc/wireguard/wgcf.conf"
 wg2="sed -i '/\:\:\/0/d' /etc/wireguard/wgcf.conf"
 # Wgcf Endpoint
-wg3="sed -i "s/engage.cloudflareclient.com:2408/$best_endpoint/g" /etc/wireguard/wgcf.conf"
-wg4="sed -i "s/engage.cloudflareclient.com:2408/$best_endpoint/g" /etc/wireguard/wgcf.conf"
+wg3="sed -i "s/engage.cloudflareclient.com:2408/$bestendpoint/g" /etc/wireguard/wgcf.conf"
+wg4="sed -i "s/engage.cloudflareclient.com:2408/$bestendpoint/g" /etc/wireguard/wgcf.conf"
 # Wgcf DNS Servers
 wg5="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844/g' /etc/wireguard/wgcf.conf"
 wg6="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
@@ -164,8 +164,8 @@ wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf'
 wgo2='sed -i "s#.*AllowedIPs.*#AllowedIPs = ::/0#g" /opt/warp-go/warp.conf'
 wgo3='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0,::/0#g" /opt/warp-go/warp.conf'
 # WARP-Go EndPoint
-wgo4="sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf"
-wgo5="sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf"
+wgo4="sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$bestendpoint/g" /opt/warp-go/warp.conf"
+wgo5="sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$bestendpoint/g" /opt/warp-go/warp.conf"
 # WARP-Go 允许外部IP地址
 wgo6='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf'
 wgo7='sed -i "s#.*PostUp.*#PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf'
