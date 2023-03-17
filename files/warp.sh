@@ -144,7 +144,7 @@ checkendpoint(){
     ./warp-linux-$(archAffix)
     bestendpoint=$(cat result.csv | sed -n 2p | awk -F "," '{print $1}')
     rm -f ip.txt result.csv warp-linux-$(archAffix)
-    green "最优 IPv4 Endpoint IP=$bestendpoint 已设置完毕"
+    green "最优 Endpoint IP=$bestendpoint 已设置完毕"
 }
 
 wg1="sed -i '/0\.0\.0\.0\/0/d' /etc/wireguard/wgcf.conf"
