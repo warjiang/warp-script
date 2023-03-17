@@ -53,7 +53,7 @@ VIRT=$(systemd-detect-virt)
 TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
 
 checkendpoint(){
-    yellow "正在优选最优 IPv4 Endpoint IP，大约需要1-2分钟"
+    yellow "正在优选最优 Endpoint IP，大约需要1-2分钟"
     checkv4v6
     if [ -n $ipv4 ]; then
         n=0
