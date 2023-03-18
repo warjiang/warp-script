@@ -181,9 +181,6 @@ check_mtu(){
         fi
     done
     MTU=$((${MTUy} - 80))
-    if [[ -n $(type -P wgcf) ]]; then
-        sed -i "s/MTU.*/MTU = $MTU/g" wgcf-profile.conf
-    fi
     
     if [[ -a "/opt/warp-go/warp-go" ]]; then
         sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
@@ -323,13 +320,19 @@ install_wgcf_ipv4(){
     # 根据检测结果，选择适合的模式安装
     if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
         # IPv4 Only
+        wgcf1=$wg2 && wgcf2=$wg3 && wgcf3=$wg5
     elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
         # IPv6 Only
+        wgcf1=$wg2 && wgcf2=$wg4
     elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
         # 双栈
+        wgcf1=$wg2 && wgcf2=$wg3 && wgcf3=$wg5
     elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
         # NAT IPv4 + IPv6
+        wgcf1=$wg2 && wgcf2=$wg4 && wgcf3=$wg5
     fi
+
+    install_wgcf
 }
 
 install_wgcf_ipv6(){
@@ -348,13 +351,19 @@ install_wgcf_ipv6(){
     # 根据检测结果，选择适合的模式安装
     if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
         # IPv4 Only
+        wgcf1=$wg1 && wgcf2=$wg3
     elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
         # IPv6 Only
+        wgcf1=$wg1 && wgcf2=$wg4 && wgcf3=$wg6
     elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
         # 双栈
+        wgcf1=$wg1 && wgcf2=$wg3 && wgcf3=$wg6
     elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
         # NAT IPv4 + IPv6
+        wgcf1=$wg1 && wgcf2=$wg4 && wgcf3=$wg6
     fi
+
+    install_wgcf
 }
 
 install_wgcf_dual(){
@@ -373,13 +382,152 @@ install_wgcf_dual(){
     # 根据检测结果，选择适合的模式安装
     if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
         # IPv4 Only
+        wgcf1=$wg3 && wgcf2=$wg5
     elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
         # IPv6 Only
+        wgcf1=$wg4 && wgcf2=$wg6
     elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
         # 双栈
+        wgcf1=$wg3 && wgcf2=$wg7
     elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
         # NAT IPv4 + IPv6
+        wgcf1=$wg4 && wgcf2=$wg6
     fi
+
+    install_wgcf
+}
+
+# 下载 WGCF
+init_wgcf(){
+    wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wgcf/wgcf-latest-linux-$(archAffix) -O /usr/local/bin/wgcf
+    chmod +x /usr/local/bin/wgcf
+}
+
+# 利用 WGCF 注册 CloudFlare WARP 账户
+register_wgcf(){
+    # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
+    if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
+        cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
+    fi
+
+    # 注册 WARP 账户，直到注册成功为止
+    until [[ -a wgcf-account.toml ]]; do
+        yellow "正在向CloudFlare WARP注册账号, 如提示429 Too Many Requests错误请耐心等待脚本重试注册即可"
+        wgcf register --accept-tos
+        sleep 5
+    done
+    chmod +x wgcf-account.toml
+
+    # 生成 WireGuard 配置文件
+    wgcf generate && chmod +x wgcf-profile.conf
+}
+
+# 配置 WGCF 的 WireGuard 配置文件
+conf_wgcf(){
+    echo $wgcf1 | sh
+    echo $wgcf2 | sh
+    echo $wgcf3 | sh
+}
+
+# 检查 WGCF 是否启动成功，如未启动成功则提示
+check_wgcf(){
+    yellow "正在启动 WGCF-WARP"
+    i=0
+    while [ $i -le 4 ]; do let i++
+        wg-quick down wgcf >/dev/null 2>&1
+        wg-quick up wgcf >/dev/null 2>&1
+        check_warp
+        if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
+            green "WGCF-WARP 已启动成功！"
+            break
+        else
+            red "WGCF-WARP 启动失败！"
+        fi
+
+        check_warp
+        if [[ ! $warp_v4 =~ on|plus && ! $warp_v6 =~ on|plus ]]; then
+            wg-quick down wgcf >/dev/null 2>&1
+            red "安装 WGCF-WARP 失败！"
+            green "建议如下："
+            yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+            yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+            yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
+            yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁，请卸载 WGCF ，然后使用 WARP-GO 重试"
+            exit 1
+        fi
+    done
+}
+
+install_wgcf(){
+    # 检测系统要求，如未达到要求则打断安装
+    [[ $SYSTEM == "CentOS" ]] && [[ ${OSID} -lt 7 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持CentOS / Almalinux / Rocky / Oracle Linux 7及以上版本的系统" && exit 1
+    [[ $SYSTEM == "Debian" ]] && [[ ${OSID} -lt 10 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Debian 10及以上版本的系统" && exit 1
+    [[ $SYSTEM == "Fedora" ]] && [[ ${OSID} -lt 29 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Fedora 29及以上版本的系统" && exit 1
+    [[ $SYSTEM == "Ubuntu" ]] && [[ ${OSID} -lt 18 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Ubuntu 16.04及以上版本的系统" && exit 1
+
+    # 检测 TUN 模块是否开启
+    check_tun
+
+    # 安装 WGCF 必需依赖
+    if [[ $SYSTEM == "CentOS" ]]; then
+        ${PACKAGE_INSTALL[int]} epel-release
+        ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+        if [[ $OSID == 9 ]] && [[ -z $(type -P resolvconf) ]]; then
+            wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/resolvconf -O /usr/sbin/resolvconf
+            chmod +x /usr/sbin/resolvconf
+        fi
+    fi
+    if [[ $SYSTEM == "Fedora" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+    fi
+    if [[ $SYSTEM == "Debian" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo wget curl lsb-release bc htop screen python3 inetutils-ping qrencode
+        echo "deb http://deb.debian.org/debian $(lsb_release -sc)-backports main" | tee /etc/apt/sources.list.d/backports.list
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
+    fi
+    if [[ $SYSTEM == "Ubuntu" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop screen python3 inetutils-ping qrencode
+        ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
+    fi
+
+    # 如 Linux 系统内核版本 < 5.6，或为 OpenVZ / LXC 虚拟化架构的VPS，则安装 Wireguard-GO
+    if [[ $main -lt 5 ]] || [[ $minor -lt 6 ]] || [[ $VIRT =~ lxc|openvz ]]; then
+        wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wireguard-go/wireguard-go-$(archAffix) -O /usr/bin/wireguard-go
+        chmod +x /usr/bin/wireguard-go
+    fi
+
+    # 下载并安装 WGCF
+    init_wgcf
+
+    # 在 WGCF 处注册账户
+    register_wgcf
+
+    # 检测 /etc/wireguard 文件夹是否创建，如未创建则创建一个
+    if [[ ! -d "/etc/wireguard" ]]; then
+        mkdir /etc/wireguard
+    fi
+    
+    # 移动对应的配置文件，避免用户删除
+    cp -f wgcf-profile.conf /etc/wireguard/wgcf.conf
+    mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
+    mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
+
+    # 设置 WGCF 的 WireGuard 配置文件
+    conf_wgcf
+
+    # 检查最佳 MTU 值，并应用至 WGCF 配置文件
+    check_mtu
+    sed -i "s/MTU.*/MTU = $MTU/g" /etc/wireguard/wgcf.conf
+
+    # 优选 EndPoint IP，并应用至 WGCF 配置文件
+    check_endpoint
+    sed -i "s/engage.cloudflareclient.com/$best_endpoint/g" /etc/wireguard/wgcf.conf
+
+    # 检查 WGCF 是否启动成功
+    check_wgcf
 }
 
 menu(){
@@ -389,6 +537,7 @@ menu(){
     echo -e "# ${GREEN}作者${PLAIN}: MisakaNo の 小破站                                  #"
     echo -e "# ${GREEN}博客${PLAIN}: https://blog.misaka.rest                            #"
     echo -e "# ${GREEN}GitHub 项目${PLAIN}: https://github.com/Misaka-blog               #"
+    echo -e "# ${GREEN}GitLab 项目${PLAIN}: https://gitlab.com/Misaka-blog               #"
     echo -e "# ${GREEN}Telegram 频道${PLAIN}: https://t.me/misaka_noc                    #"
     echo -e "# ${GREEN}Telegram 群组${PLAIN}: https://t.me/misaka_noc_chat               #"
     echo -e "# ${GREEN}YouTube 频道${PLAIN}: https://www.youtube.com/@misaka-blog        #"
@@ -418,7 +567,7 @@ menu(){
     #echo ""
     read -rp "请输入选项 [0-13]: " menuInput
     case $menuInput in
-        1 ) infowgcf ;;
+        1 ) wgcf_mode ;;
         2 ) unstwgcf ;;
         3 ) infowpgo ;;
         4 ) unstwpgo ;;
