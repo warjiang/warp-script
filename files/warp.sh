@@ -1458,6 +1458,13 @@ wgcf_account() {
     echo -e " ${GREEN}3.${PLAIN} WARP Teams"
     echo ""
     read -p "请输入选项 [1-3]: " account_type
+    if [[ $account_type == 2 ]]; then
+
+    elif [[ $account_type == 3 ]]; then
+
+    else
+
+    fi
 }
 
 wpgo_account() {
@@ -1468,6 +1475,15 @@ wpgo_account() {
     echo -e " ${GREEN}3.${PLAIN} WARP Teams"
     echo ""
     read -p "请输入选项 [1-3]: " account_type
+    if [[ $account_type == 2 ]]; then
+
+    elif [[ $account_type == 3 ]]; then
+        # 询问用户 WARP Teams 账户 TOKEN
+        yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
+        read -rp "请输入 WARP Teams 账户的 TOKEN：" teamstoken
+    else
+
+    fi
 }
 
 warp_cli_account() {
@@ -1482,6 +1498,13 @@ wireproxy_account() {
     echo -e " ${GREEN}3.${PLAIN} WARP Teams"
     echo ""
     read -p "请输入选项 [1-3]: " account_type
+    if [[ $account_type == 2 ]]; then
+
+    elif [[ $account_type == 3 ]]; then
+
+    else
+
+    fi
 }
 
 warp_account() {
