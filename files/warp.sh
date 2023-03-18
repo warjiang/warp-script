@@ -87,7 +87,7 @@ check_ip(){
     ipv6=$(curl -s6m8 ip.p3terx.com | sed -n 1p)
 }
 
-# 检查 VPS 的 IP 形式
+# 检测 VPS 的 IP 形式
 check_stack(){
     lan4=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
     lan6=$(ip route get 2606:4700:4700::1111 2>/dev/null | grep -oP 'src \K\S+')
@@ -497,6 +497,7 @@ check_wgcf(){
             yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
             yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
             yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁，请卸载 WGCF ，然后使用 WARP-GO 重试"
+            yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
             exit 1
         fi
     done
@@ -660,7 +661,8 @@ check_wpgo(){
             red "安装 WARP-GO 失败！"
             green "建议如下："
             yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
-            yellow "2. 部分VPS系统极度精简，相关依赖需自行安装后再尝试"
+            yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+            yellow "3. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
             exit 1
         fi
     done
@@ -908,6 +910,108 @@ uninstall_wpgo(){
     green "WARP-GO 已彻底卸载成功!"
 }
 
+install_warp_cli(){
+    # 检测系统要求，如未达到要求则打断安装
+    [[ $SYSTEM == "CentOS" ]] && [[ ! ${OSID} =~ 8|9 ]] && yellow "当前系统版本：${CMD} \nWARP-Cli代理模式仅支持CentOS / Almalinux / Rocky / Oracle Linux 8 / 9系统" && exit 1
+    [[ $SYSTEM == "Debian" ]] && [[ ! ${OSID} =~ 9|10|11 ]] && yellow "当前系统版本：${CMD} \nWARP-Cli代理模式仅支持Debian 9-11系统" && exit 1
+    [[ $SYSTEM == "Fedora" ]] && yellow "当前系统版本：${CMD} \nWARP-Cli暂时不支持Fedora系统" && exit 1
+    [[ $SYSTEM == "Ubuntu" ]] && [[ ! ${OSID} =~ 16|18|20|22 ]] && yellow "当前系统版本：${CMD} \nWARP-Cli代理模式仅支持Ubuntu 16.04/18.04/20.04/22.04系统" && exit 1
+    
+    [[ ! $(archAffix) == "amd64" ]] && red "WARP-Cli暂时不支持目前VPS的CPU架构, 请使用CPU架构为amd64的VPS" && exit 1
+
+    # 检测 TUN 模块是否开启
+    check_tun
+
+    # 由于 CloudFlare WARP 客户端目前只支持 AMD64 的 CPU 架构，故检测到其他架构，则打断安装
+    if [[ ! $(archAffix) == "amd64" ]]; then
+        red "WARP-Cli 暂时不支持目前 VPS 的 CPU 架构, 请使用 CPU 架构为 amd64 的 VPS" && exit 1
+        exit 1
+    fi
+
+    # 检测 VPS 的 IP 形式，如为 IPv6 Only 的 VPS，则打断安装（啥时候 CloudFlare 发点力，支持一下又不会似一个妈）
+    check_stack
+    if [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        red "WARP-Cli 暂时不支持 IPv6 Only 的 VPS，请使用带有 IPv4 网络的 VPS" && exit 1
+    fi
+
+    # 安装 WARP-Cli 及其依赖
+    if [[ $SYSTEM == "CentOS" ]]; then
+        ${PACKAGE_INSTALL[int]} epel-release
+        ${PACKAGE_INSTALL[int]} sudo curl wget net-tools bc htop iputils screen python3 qrencode
+        rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
+        ${PACKAGE_INSTALL[int]} cloudflare-warp
+    fi   
+    if [[ $SYSTEM == "Debian" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop inetutils-ping screen python3 qrencode
+        [[ -z $(type -P gpg 2>/dev/null) ]] && ${PACKAGE_INSTALL[int]} gnupg
+        [[ -z $(apt list 2>/dev/null | grep apt-transport-https | grep installed) ]] && ${PACKAGE_INSTALL[int]} apt-transport-https
+        curl https://pkg.cloudflareclient.com/pubkey.gpg | apt-key add -
+        echo "deb http://pkg.cloudflareclient.com/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/cloudflare-client.list
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} cloudflare-warp
+    fi    
+    if [[ $SYSTEM == "Ubuntu" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop inetutils-ping screen python3 qrencode
+        curl https://pkg.cloudflareclient.com/pubkey.gpg | apt-key add -
+        echo "deb http://pkg.cloudflareclient.com/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/cloudflare-client.list
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} cloudflare-warp
+    fi
+
+    # 询问用户 WARP-Cli 代理模式所使用的端口，如被占用则提示更换
+    read -rp "请输入 WARP-Cli 代理模式所使用的端口 (默认随机端口) ：" port
+    [[ -z $port ]] && port=$(shuf -i 1000-65535 -n 1)
+    if [[ -n $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; then
+        until [[ -z $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; do
+            if [[ -n $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; then
+                yellow "你设置的端口目前已被占用，请重新输入端口"
+                read -rp "请输入WARP-Cli使用的代理端口 (默认随机端口): " port
+            fi
+        done
+    fi
+
+    # 向 CloudFlare WARP 注册账户
+    warp-cli --accept-tos register >/dev/null 2>&1
+
+    # 在 WARP-Cli 设置代理模式和 socks5 的端口
+    warp-cli --accept-tos set-mode proxy >/dev/null 2>&1
+    warp-cli --accept-tos set-proxy-port "$port" >/dev/null 2>&1
+
+    # 优选 EndPoint IP，并应用至 WARP-Cli
+    check_endpoint
+    warp-cli --accept-tos set-custom-endpoint "$best_endpoint" >/dev/null 2>&1
+
+    # 启动 WARP-Cli，并检查是否正常运行
+    warp-cli --accept-tos connect >/dev/null 2>&1
+    warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+    sleep 2
+    if [[ ! $(ss -nltp) =~ 'warp-svc' ]]; then
+        red "WARP-Cli 代理模式安装失败"
+        green "建议如下："
+        yellow "1. 建议使用系统官方源升级系统及内核加速！如已使用第三方源及内核加速 ,请务必更新到最新版 ,或重置为系统官方源！"
+        yellow "2. 部分 VPS 系统过于精简 ,相关依赖需自行安装后再重试"
+        yellow "3. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+        exit 1
+    else
+        green "WARP-Cli 代理模式已启动成功！"
+    fi
+}
+
+uninstall_warp_cli(){
+    # 关闭 WARP-Cli
+    warp-cli --accept-tos disconnect >/dev/null 2>&1
+    warp-cli --accept-tos disable-always-on >/dev/null 2>&1
+    warp-cli --accept-tos delete >/dev/null 2>&1
+    systemctl disable --now warp-svc >/dev/null 2>&1
+
+    # 卸载 WARP-Cli
+    ${PACKAGE_UNINSTALL[int]} cloudflare-warp
+
+    green "WARP-Cli客户端已彻底卸载成功!"
+}
+
 menu(){
     clear
     echo "#############################################################"
@@ -949,8 +1053,8 @@ menu(){
         2 ) uninstall_wgcf ;;
         3 ) select_wpgo ;;
         4 ) uninstall_wpgo ;;
-        5 ) installcli ;;
-        6 ) uninstallcli ;;
+        5 ) install_warp_cli ;;
+        6 ) uninstall_warp_cli ;;
         7 ) installWireProxy ;;
         8 ) uninstallWireProxy ;;
         9 ) warpport ;;
