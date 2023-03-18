@@ -856,7 +856,26 @@ install_wpgo(){
     check_endpoint
     sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
 
-    # 检测 WARP-GO 是否正常运行
+    # 设置 WARP-GO 系统服务
+    cat <<EOF > /lib/systemd/system/warp-go.service
+[Unit]
+Description=warp-go service
+After=network.target
+Documentation=https://gitlab.com/Misaka-blog/warp-script
+Documentation=https://gitlab.com/ProjectWARP/warp-go
+
+[Service]
+WorkingDirectory=/opt/warp-go/
+ExecStart=/opt/warp-go/warp-go --config=/opt/warp-go/warp.conf
+Environment="LOG_LEVEL=verbose"
+RemainAfterExit=yes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
     check_wpgo
 }
 
