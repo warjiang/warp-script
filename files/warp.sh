@@ -194,7 +194,7 @@ check_endpoint(){
     yellow "正在检测并设置最佳 Endpoint IP 地址, 请稍等，大约需要1-2分钟..."
 
     # 下载优选工具软件，感谢某匿名网友的分享
-    wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp
+    wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp >/dev/null 2>&1
 
     # 根据 VPS 的出站 IP 情况，生成对应的优选 Endpoint IP 段列表
     check_ip
@@ -277,7 +277,7 @@ check_endpoint(){
     ulimit -n 102400
 
     # 启动 WARP Endpoint IP 优选工具
-    chmod +x warp && ./warp
+    chmod +x warp && ./warp >/dev/null 2>&1
 
     # 将 result.csv 文件的优选 Endpoint IP 提取出来，放置到 best_endpoint 变量中备用
     best_endpoint=$(cat result.csv | sed -n 2p | awk -F ',' '{print $1}')
@@ -535,6 +535,36 @@ install_wgcf(){
     check_wgcf
 }
 
+# 卸载 WGCF
+uninstall_wgcf(){
+    # 关闭 WGCF
+    wg-quick down wgcf 2>/dev/null
+    systemctl disable wg-quick@wgcf 2>/dev/null
+
+    # 卸载 WireGuard 依赖
+    ${PACKAGE_UNINSTALL[int]} wireguard-tools
+
+    # 因为 WireProxy 需要依赖 WGCF，如未检测到，则删除账户信息文件
+    if [[ -z $(type -P wireproxy) ]]; then
+        rm -f /usr/local/bin/wgcf
+        rm -f /etc/wireguard/wgcf-profile.toml
+        rm -f /etc/wireguard/wgcf-account.toml
+    fi
+
+    # 删除 WGCF WireGuard 配置文件
+    rm -f /etc/wireguard/wgcf.conf
+
+    # 如有 WireGuard-GO，则删除
+    rm -f /usr/bin/wireguard-go
+
+    # 恢复 VPS 默认的出站规则
+    if [[ -e /etc/gai.conf ]]; then
+        sed -i '/^precedence[ ]*::ffff:0:0\/96[ ]*100/d' /etc/gai.conf
+    fi
+
+    green "Wgcf-WARP 已彻底卸载成功!"
+}
+
 menu(){
     clear
     echo "#############################################################"
@@ -573,7 +603,7 @@ menu(){
     read -rp "请输入选项 [0-13]: " menu_input
     case $menu_input in
         1 ) select_wgcf ;;
-        2 ) unstwgcf ;;
+        2 ) uninstall_wgcf ;;
         3 ) infowpgo ;;
         4 ) unstwpgo ;;
         5 ) installcli ;;
