@@ -1159,6 +1159,106 @@ uninstall_wireproxy(){
     before_showinfo && show_info
 }
 
+change_warp_port(){
+    yellow "请选择需要修改端口的 WARP 客户端"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WARP-Cli"
+    echo -e " ${GREEN}2.${PLAIN} WireProxy"
+    echo ""
+    read -p "请输入选项 [1-2]: " chport_mode
+    if [[ $chport_mode == 1 ]]; then
+        # 如 WARP-Cli 正在启动，则关闭
+        if [[ $(warp-cli --accept-tos status) =~ Connected ]]; then
+            warp-cli --accept-tos disconnect >/dev/null 2>&1
+        fi
+
+        # 询问用户 WARP-Cli 代理模式所使用的端口，如被占用则提示更换
+        read -rp "请输入 WARP-Cli 代理模式所使用的端口 (默认随机端口) ：" port
+        [[ -z $port ]] && port=$(shuf -i 1000-65535 -n 1)
+        if [[ -n $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; then
+            until [[ -z $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; do
+                if [[ -n $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; then
+                    yellow "你设置的端口目前已被占用，请重新输入端口"
+                    read -rp "请输入 WARP-Cli 代理模式所使用的端口 (默认随机端口) ：" port
+                fi
+            done
+        fi
+
+        # 设置 WARP-Cli 代理模式所使用的端口
+        warp-cli --accept-tos set-proxy-port "$port" >/dev/null 2>&1
+
+        # 启动 WARP-Cli，并检查是否正常运行
+        warp-cli --accept-tos connect >/dev/null 2>&1
+        warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+        sleep 2
+        if [[ ! $(ss -nltp) =~ 'warp-svc' ]]; then
+            red "WARP-Cli 代理模式安装失败"
+            green "建议如下："
+            yellow "1. 建议使用系统官方源升级系统及内核加速！如已使用第三方源及内核加速 ,请务必更新到最新版 ,或重置为系统官方源！"
+            yellow "2. 部分 VPS 系统过于精简 ,相关依赖需自行安装后再重试"
+            yellow "3. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+            exit 1
+        else
+            green "WARP-Cli 代理模式已启动成功！"
+            before_showinfo && show_info
+        fi
+    elif [[ $chport_mode == 2 ]]; then
+        # 如 WireProxy 正在启动，则关闭
+        if [[ -n $(ss -nltp | grep wireproxy) ]]; then
+            systemctl stop wireproxy-warp
+        fi
+
+        # 询问用户 WireProxy 所使用的端口，如被占用则提示更换
+        read -rp "请输入 WireProxy-WARP 代理模式所使用的端口 (默认随机端口) ：" port
+        [[ -z $port ]] && port=$(shuf -i 1000-65535 -n 1)
+        if [[ -n $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; then
+            until [[ -z $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; do
+                if [[ -n $(ss -ntlp | awk '{print $4}' | grep -w "$port") ]]; then
+                    yellow "你设置的端口目前已被占用，请重新输入端口"
+                    read -rp "请输入 WireProxy-WARP 代理模式所使用的端口 (默认随机端口) ：" port
+                fi
+            done
+        fi
+        
+        # 获取当前 WireProxy 的 socks5 端口
+        current_port=$(grep BindAddress /etc/wireguard/proxy.conf)
+        sed -i "s/$current_port/BindAddress = 127.0.0.1:$port/g" /etc/wireguard/proxy.conf
+
+        # 启动 WireProxy，并检查是否正常运行
+        yellow "正在启动 WireProxy-WARP 代理模式"
+        systemctl start wireproxy-warp
+        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        sleep 2
+        retry_time=0
+        until [[ $wireproxy_status =~ on|plus ]]; do
+            retry_time=$((${retry_time} + 1))
+            red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
+            systemctl stop wireproxy-warp
+            systemctl start wireproxy-warp
+            wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+            if [[ $retry_time == 6 ]]; then
+                echo ""
+                red "安装 WireProxy-WARP 代理模式失败！"
+                green "建议如下："
+                yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+                yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+                yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
+                yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
+                yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+                exit 1
+            fi
+            sleep 8
+        done
+        sleep 5
+        systemctl enable wireproxy-warp >/dev/null 2>&1
+        green "WireProxy-WARP 代理模式已启动成功!"
+        before_showinfo && show_info
+    else
+        red "输入错误，请重新输入"
+        change_warp_port
+    fi
+}
+
 before_showinfo(){
     yellow "请等待，正在检测 VPS 以及 WARP 状态..."
 
@@ -1349,7 +1449,7 @@ menu(){
         6 ) uninstall_warp_cli ;;
         7 ) install_wireproxy ;;
         8 ) uninstall_wireproxy ;;
-        9 ) warpport ;;
+        9 ) change_warp_port ;;
         10 ) warpswitch ;;
         11 ) wgprofile ;;
         12 ) warptraffic ;;
