@@ -39,3 +39,58 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
 done
 
 [[ -z $SYSTEM ]] && red "不支持当前VPS系统, 请使用主流的操作系统" && exit 1
+
+menu(){
+    clear
+    echo "#############################################################"
+    echo -e "#                ${RED}CloudFlare WARP 一键管理脚本${PLAIN}               #"
+    echo -e "# ${GREEN}作者${PLAIN}: MisakaNo の 小破站                                  #"
+    echo -e "# ${GREEN}博客${PLAIN}: https://blog.misaka.rest                            #"
+    echo -e "# ${GREEN}GitHub 项目${PLAIN}: https://github.com/Misaka-blog               #"
+    echo -e "# ${GREEN}Telegram 频道${PLAIN}: https://t.me/misaka_noc                    #"
+    echo -e "# ${GREEN}Telegram 群组${PLAIN}: https://t.me/misaka_noc_chat               #"
+    echo -e "# ${GREEN}YouTube 频道${PLAIN}: https://www.youtube.com/@misaka-blog        #"
+    echo "#############################################################"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP"
+    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 Wgcf-WARP${PLAIN}"
+    echo " -------------"
+    echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 WARP-GO"
+    echo -e " ${GREEN}4.${PLAIN} ${RED}卸载 WARP-GO${PLAIN}"
+    echo " -------------"
+    echo -e " ${GREEN}5.${PLAIN} 安装 WARP-Cli"
+    echo -e " ${GREEN}6.${PLAIN} ${RED}卸载 WARP-Cli${PLAIN}"
+    echo " -------------"
+    echo -e " ${GREEN}7.${PLAIN} 安装 WireProxy-WARP"
+    echo -e " ${GREEN}8.${PLAIN} ${RED}卸载 WireProxy-WARP${PLAIN}"
+    echo " -------------"
+    echo -e " ${GREEN}9.${PLAIN} 修改 WARP-Cli / WireProxy 端口"
+    echo -e " ${GREEN}10.${PLAIN} 开启、关闭或重启 WARP"
+    echo -e " ${GREEN}11.${PLAIN} 提取 WireGuard 配置文件"
+    echo -e " ${GREEN}12.${PLAIN} WARP+ 账户刷流量"
+    echo -e " ${GREEN}13.${PLAIN} 切换 WARP 账户类型"
+    echo " -------------"
+    echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+    echo ""
+    #ipinfo
+    #echo ""
+    read -rp "请输入选项 [0-13]: " menuInput
+    case $menuInput in
+        1 ) infowgcf ;;
+        2 ) unstwgcf ;;
+        3 ) infowpgo ;;
+        4 ) unstwpgo ;;
+        5 ) installcli ;;
+        6 ) uninstallcli ;;
+        7 ) installWireProxy ;;
+        8 ) uninstallWireProxy ;;
+        9 ) warpport ;;
+        10 ) warpswitch ;;
+        11 ) wgprofile ;;
+        12 ) warptraffic ;;
+        13 ) warpaccount ;;
+        * ) exit 1 ;;
+    esac
+}
+
+menu
