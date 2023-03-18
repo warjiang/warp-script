@@ -905,7 +905,7 @@ uninstall_wpgo(){
     # 删除 WARP-GO 程序及日志文件
     rm -rf /opt/warp-go /tmp/warp-go* /lib/systemd/system/warp-go.service
 
-    green "WARP-Go 已彻底卸载成功!"
+    green "WARP-GO 已彻底卸载成功!"
 }
 
 menu(){
