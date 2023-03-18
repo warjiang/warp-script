@@ -891,6 +891,23 @@ switch_wpgo_conf(){
     check_wpgo
 }
 
+uninstall_wpgo(){
+    # 关闭 WARP-GO
+    systemctl stop warp-go
+    systemctl disable --now warp-go >/dev/null 2>&1
+
+    # 检测 WARP-GO 残留进程是否运行，如运行则杀掉
+    kill -15 $(pgrep warp-go) >/dev/null 2>&1
+
+    # 注销账户、并删除配置文件
+    /opt/warp-go/warp-go --config=/opt/warp-go/warp.conf --remove >/dev/null 2>&1
+
+    # 删除 WARP-GO 程序及日志文件
+    rm -rf /opt/warp-go /tmp/warp-go* /lib/systemd/system/warp-go.service
+
+    green "WARP-Go 已彻底卸载成功!"
+}
+
 menu(){
     clear
     echo "#############################################################"
@@ -931,7 +948,7 @@ menu(){
         1 ) select_wgcf ;;
         2 ) uninstall_wgcf ;;
         3 ) select_wpgo ;;
-        4 ) unstwpgo ;;
+        4 ) uninstall_wpgo ;;
         5 ) installcli ;;
         6 ) uninstallcli ;;
         7 ) installWireProxy ;;
