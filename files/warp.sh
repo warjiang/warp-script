@@ -1303,6 +1303,148 @@ change_warp_port(){
     fi
 }
 
+switch_warp(){
+    yellow "请选择需要修改端口的 WARP 客户端"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 启动 Wgcf-WARP"
+    echo -e " ${GREEN}2.${PLAIN} 关闭 Wgcf-WARP"
+    echo -e " ${GREEN}3.${PLAIN} 重启 Wgcf-WARP"
+    echo -e " ${GREEN}4.${PLAIN} 启动 WARP-GO"
+    echo -e " ${GREEN}5.${PLAIN} 关闭 WARP-GO"
+    echo -e " ${GREEN}6.${PLAIN} 重启 WARP-GO"
+    echo -e " ${GREEN}7.${PLAIN} 启动 WARP-Cli"
+    echo -e " ${GREEN}8.${PLAIN} 关闭 WARP-Cli"
+    echo -e " ${GREEN}9.${PLAIN} 重启 WARP-Cli"
+    echo -e " ${GREEN}10.${PLAIN} 启动 WireProxy-WARP"
+    echo -e " ${GREEN}11.${PLAIN} 关闭 WireProxy-WARP"
+    echo -e " ${GREEN}12.${PLAIN} 重启 WireProxy-WARP"
+    echo ""
+    read -rp "请输入选项 [0-12]: " switch_input
+    case $switch_input in
+        1 ) 
+            wg-quick up wgcf >/dev/null 2>&1
+            systemctl enable wg-quick@wgcf >/dev/null 2>&1
+            ;;
+        2 ) 
+            wg-quick down wgcf >/dev/null 2>&1
+            systemctl disable wg-quick@wgcf >/dev/null 2>&1
+            ;;
+        3 ) 
+            wg-quick down wgcf >/dev/null 2>&1
+            systemctl disable wg-quick@wgcf >/dev/null 2>&1
+            wg-quick up wgcf >/dev/null 2>&1
+            systemctl enable wg-quick@wgcf >/dev/null 2>&1
+            ;;
+        4 ) 
+            systemctl start warp-go
+            systemctl enable warp-go >/dev/null 2>&1
+            ;;
+        5 ) 
+            systemctl stop warp-go
+            systemctl disable warp-go >/dev/null 2>&1
+            ;;
+        6 ) 
+            systemctl stop warp-go
+            systemctl disable warp-go >/dev/null 2>&1
+            systemctl start warp-go
+            systemctl enable warp-go >/dev/null 2>&1
+            ;;
+        7 ) 
+            warp-cli --accept-tos connect >/dev/null 2>&1
+            warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+            ;;
+        8 ) warp-cli --accept-tos disconnect >/dev/null 2>&1 ;;
+        9 ) 
+            warp-cli --accept-tos disconnect >/dev/null 2>&1
+            warp-cli --accept-tos connect >/dev/null 2>&1
+            warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+            ;;
+        10 ) 
+            systemctl start wireproxy-warp
+            systemctl enable wireproxy-warp
+            ;;
+        11 ) 
+            systemctl stop wireproxy-warp
+            systemctl disable wireproxy-warp
+            ;;
+        12 ) 
+            systemctl stop wireproxy-warp
+            systemctl disable wireproxy-warp
+            systemctl start wireproxy-warp
+            systemctl enable wireproxy-warp
+            ;;
+        * ) exit 1 ;;
+    esac
+}
+
+wireguard_profile(){
+    yellow "请选择需要从哪个 WARP 客户端生成 WireGuard 配置文件"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WARP-GO"
+    echo -e " ${GREEN}2.${PLAIN} WGCF"
+    echo ""
+    read -p "请输入选项 [1-2]: " profile_mode
+    if [[ $profile_mode == 1 ]]; then
+        # 调用 WARP-GO 的接口，生成 WireGuard 配置文件，并判断生成状态
+        result=$(/opt/warp-go/warp-go --config=/opt/warp-go/warp.conf --export-wireguard=/root/warpgo-proxy.conf) && sleep 5
+        if [[ ! $result == "Success" ]]; then
+            red "WARP-GO 的 WireGuard 配置文件生成失败！"
+            exit 1
+        fi
+
+        # 用户回显、以及生成二维码
+        green "WARP-GO 的 WireGuard 配置文件已提取成功！"
+        yellow "文件已保存至：/root/warpgo-proxy.conf"
+        yellow "节点配置二维码如下所示："
+        qrencode -t ansiutf8 < /root/warpgo-proxy.conf
+        echo ""
+        yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
+    elif [[ $profile_mode == 2 ]]; then
+        # 复制 WGCF 配置文件
+        cp -f /etc/wireguard/wgcf-profile.conf /root/wgcf-proxy.conf
+
+        # 用户回显、以及生成二维码
+        green "Wgcf-WARP 的 WireGuard 配置文件已提取成功！"
+        yellow "文件已保存至：/root/wgcf-proxy.conf"
+        yellow "节点配置二维码如下所示："
+        qrencode -t ansiutf8 < /root/wgcf-proxy.conf
+        echo ""
+        yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
+    else
+        red "输入错误，请重新输入"
+        wireguard_profile
+    fi
+}
+
+warp_traffic(){
+    if [[ -z $(type -P screen) ]]; then
+        if [[ ! $SYSTEM == "CentOS" ]]; then
+            ${PACKAGE_UPDATE[int]}
+        fi
+        ${PACKAGE_INSTALL[int]} screen
+    fi
+
+    yellow "获取自己的 CloudFlare WARP 账号信息方法: "
+    green "电脑: 下载并安装 CloudFlare WARP → 设置 → 偏好设置 → 复制设备ID到脚本中"
+    green "手机: 下载并安装 1.1.1.1 APP → 菜单 → 高级 → 诊断 → 复制设备ID到脚本中"
+    echo ""
+    yellow "请按照下面指示, 输入您的 CloudFlare WARP 账号信息:"
+    read -rp "请输入您的 WARP 设备 ID (36位字符): " license
+    until [[ $license =~ ^[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}$ ]]; do
+        red "设备 ID 输入格式输入错误，请重新输入！"
+        read -rp "请输入您的 WARP 设备 ID (36位字符): " license
+    done
+
+    wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wp-plus.py
+    sed -i "27 s/[(][^)]*[)]//g" wp-plus.py && sed -i "27 s/input/'$license'/" wp-plus.py
+
+    read -rp "请输入 Screen 会话名称 (默认为wp-plus): " screenname
+    [[ -z $screenname ]] && screenname="wp-plus"
+    screen -UdmS $screenname bash -c '/usr/bin/python3 /root/wp-plus.py'
+
+    green "创建刷 WARP+ 流量任务成功！ Screen会话名称为：$screenname"
+}
+
 before_showinfo(){
     yellow "请等待，正在检测 VPS 以及 WARP 状态..."
 
@@ -1494,9 +1636,9 @@ menu(){
         7 ) install_wireproxy ;;
         8 ) uninstall_wireproxy ;;
         9 ) change_warp_port ;;
-        10 ) warpswitch ;;
-        11 ) wgprofile ;;
-        12 ) warptraffic ;;
+        10 ) switch_warp ;;
+        11 ) wireguard_profile ;;
+        12 ) warp_traffic ;;
         13 ) warpaccount ;;
         * ) exit 1 ;;
     esac
