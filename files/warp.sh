@@ -153,7 +153,7 @@ check_tun(){
 # 检查适合 VPS 的最佳 MTU 值
 check_mtu(){
     yellow "正在检测并设置 MTU 最佳值, 请稍等..."
-    checkv4v6
+    check_ip
     MTUy=1500
     MTUc=10
     if [[ -n ${ipv6} && -z ${ipv4} ]]; then
