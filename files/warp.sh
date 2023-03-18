@@ -183,9 +183,6 @@ check_mtu(){
     # 将 MTU 最佳值放置至 MTU 变量中备用
     MTU=$((${MTUy} - 80))
     
-    if [[ -a "/opt/warp-go/warp-go" ]]; then
-        sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
-    fi
     green "MTU 最佳值 = $MTU 已设置完毕！"
 }
 
@@ -316,7 +313,7 @@ install_wgcf_ipv4(){
     # 如启动 WARP，则关闭
     if [[ -f "/opt/warp-go/warp-go" ]]; then
         systemctl stop warp-go
-        systemctl disable warp-gp
+        systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
         wg-quick down wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
@@ -361,7 +358,7 @@ install_wgcf_ipv6(){
     # 如启动 WARP，则关闭
     if [[ -f "/opt/warp-go/warp-go" ]]; then
         systemctl stop warp-go
-        systemctl disable warp-gp
+        systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
         wg-quick down wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
@@ -406,7 +403,7 @@ install_wgcf_dual(){
     # 如启动 WARP，则关闭
     if [[ -f "/opt/warp-go/warp-go" ]]; then
         systemctl stop warp-go
-        systemctl disable warp-gp
+        systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
         wg-quick down wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
@@ -459,7 +456,7 @@ register_wgcf(){
 
     # 注册 WARP 账户，直到注册成功为止
     until [[ -a wgcf-account.toml ]]; do
-        yellow "正在向CloudFlare WARP注册账号, 如提示429 Too Many Requests错误请耐心等待脚本重试注册即可"
+        yellow "正在向 CloudFlare WARP 注册账号, 如提示 429 Too Many Requests 错误请耐心等待脚本重试注册即可"
         wgcf register --accept-tos
         sleep 5
     done
@@ -632,6 +629,249 @@ uninstall_wgcf(){
     green "Wgcf-WARP 已彻底卸载成功!"
 }
 
+# 设置 WARP-GO 配置文件
+conf_wpgo(){
+    echo $wpgo1 | sh
+    echo $wpgo2 | sh
+}
+
+# 检测 WARP-GO 是否正常运行
+check_wpgo(){
+    yellow "正在启动 WARP-GO"
+    i=0
+    while [ $i -le 4 ]; do let i++
+        systemctl stop warp-go
+        systemctl disable warp-go >/dev/null 2>&1
+        systemctl start warp-go
+        systemctl enable warp-go >/dev/null 2>&1
+        check_warp
+        sleep 5
+        if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
+            green "WARP-GO 已启动成功！"
+            break
+        else
+            red "WARP-GO 启动失败！"
+        fi
+
+        check_warp
+        if [[ ! $warp_v4 =~ on|plus && ! $warp_v6 =~ on|plus ]]; then
+            systemctl stop warp-go
+            systemctl disable warp-go >/dev/null 2>&1
+            red "安装 WARP-GO 失败！"
+            green "建议如下："
+            yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+            yellow "2. 部分VPS系统极度精简，相关依赖需自行安装后再尝试"
+            exit 1
+        fi
+    done
+}
+
+# 选择 WARP-GO 安装 / 切换模式
+select_wpgo(){
+    yellow "请选择 WGCF 安装/切换的模式"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 Wgcf-WARP 双栈模式"
+    echo ""
+    read -p "请输入选项 [1-3]: " wpgo_mode
+    if [ "$wpgo_mode" = "1" ]; then
+        install_wpgo_ipv4
+    elif [ "$wpgo_mode" = "2" ]; then
+        install_wpgo_ipv6
+    elif [ "$wpgo_mode" = "3" ]; then
+        install_wpgo_dual
+    else
+        red "输入错误，请重新输入"
+        select_wpgo
+    fi
+}
+
+install_wpgo_ipv4(){
+    # 检查 WARP 状态
+    check_warp
+
+    # 如启动 WARP，则关闭
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-go
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
+
+    # 因为 WARP-GO 和 WGCF 冲突，故检测 WGCF 之后打断安装
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        red "WGCF-WARP 已安装，请先卸载 WGCF-WARP"
+        exit 1
+    fi
+
+    # 检查 VPS 的 IP 形式
+    check_stack
+
+    # 根据检测结果，选择适合的模式安装
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        # IPv4 Only
+        wpgo1=$wgo1 && wpgo2=$wgo4
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # IPv6 Only
+        wpgo1=$wgo1 && wpgo2=$wgo5
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        # 双栈
+        wpgo1=$wgo1 && wpgo2=$wgo6
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # NAT IPv4 + IPv6
+        wpgo1=$wgo1 && wpgo2=$wgo6
+    fi
+
+    # 检测是否安装 WARP-GO，如安装，则切换配置文件。反之执行安装操作
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        switch_wpgo_conf
+    else
+        install_wpgo
+    fi
+}
+
+install_wpgo_ipv6(){
+    # 检查 WARP 状态
+    check_warp
+
+    # 如启动 WARP，则关闭
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-go
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
+
+    # 因为 WARP-GO 和 WGCF 冲突，故检测 WGCF 之后打断安装
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        red "WGCF-WARP 已安装，请先卸载 WGCF-WARP"
+        exit 1
+    fi
+
+    # 检查 VPS 的 IP 形式
+    check_stack
+
+    # 根据检测结果，选择适合的模式安装
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        # IPv4 Only
+        wpgo1=$wgo2 && wpgo2=$wgo4
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # IPv6 Only
+        wpgo1=$wgo2 && wpgo2=$wgo5
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        # 双栈
+        wpgo1=$wgo2 && wpgo2=$wgo6
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # NAT IPv4 + IPv6
+        wpgo1=$wgo2 && wpgo2=$wgo6
+    fi
+
+    # 检测是否安装 WARP-GO，如安装，则切换配置文件。反之执行安装操作
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        switch_wpgo_conf
+    else
+        install_wpgo
+    fi
+}
+
+install_wpgo_dual(){
+    # 检查 WARP 状态
+    check_warp
+
+    # 如启动 WARP，则关闭
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-go
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
+
+    # 因为 WARP-GO 和 WGCF 冲突，故检测 WGCF 之后打断安装
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        red "WGCF-WARP 已安装，请先卸载 WGCF-WARP"
+        exit 1
+    fi
+
+    # 检查 VPS 的 IP 形式
+    check_stack
+
+    # 根据检测结果，选择适合的模式安装
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        # IPv4 Only
+        wpgo1=$wgo3 && wpgo2=$wgo4
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # IPv6 Only
+        wpgo1=$wgo3 && wpgo2=$wgo5
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        # 双栈
+        wpgo1=$wgo3 && wpgo2=$wgo6
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # NAT IPv4 + IPv6
+        wpgo1=$wgo3 && wpgo2=$wgo6
+    fi
+
+    # 检测是否安装 WARP-GO，如安装，则切换配置文件。反之执行安装操作
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        switch_wpgo_conf
+    else
+        install_wpgo
+    fi
+}
+
+install_wpgo(){    
+    # 检测 TUN 模块是否开启
+    check_tun
+
+    # 安装 WARP-GO 必需依赖
+    if [[ $SYSTEM == "CentOS" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
+    else
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
+    fi
+
+    # 下载 WARP-GO
+    mkdir -p /opt/warp-go/
+    wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
+    chmod +x /opt/warp-go/warp-go
+
+    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
+    until [[ -e /opt/warp-go/warp.conf ]]; do
+        yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+        /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+    done
+
+    # 设置 WARP_GO 的配置文件
+    conf_wpgo
+
+    # 检查最佳 MTU 值，并应用至 WGCF 配置文件
+    check_mtu
+    sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+
+    # 优选 EndPoint IP，并应用至 WGCF 配置文件
+    check_endpoint
+    sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+
+    # 检测 WARP-GO 是否正常运行
+    check_wpgo
+}
+
+switch_wpgo_conf(){
+    # 关闭 WARP-GO
+    systemctl stop warp-go
+    systemctl disable warp-go
+
+    # 修改配置文件内容
+    conf_wpgo
+
+    # 检测 WARP-GO 是否正常运行
+    check_wpgo
+}
+
 menu(){
     clear
     echo "#############################################################"
@@ -671,7 +911,7 @@ menu(){
     case $menu_input in
         1 ) select_wgcf ;;
         2 ) uninstall_wgcf ;;
-        3 ) infowpgo ;;
+        3 ) select_wpgo ;;
         4 ) unstwpgo ;;
         5 ) installcli ;;
         6 ) uninstallcli ;;
