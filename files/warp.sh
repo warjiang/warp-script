@@ -180,12 +180,13 @@ check_mtu(){
             break
         fi
     done
+    # 将 MTU 最佳值放置至 MTU 变量中备用
     MTU=$((${MTUy} - 80))
     
     if [[ -a "/opt/warp-go/warp-go" ]]; then
         sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
     fi
-    green "MTU 最佳值 = $MTU 已设置完毕"
+    green "MTU 最佳值 = $MTU 已设置完毕！"
 }
 
 # 检查适合 VPS 的最佳 Endpoint IP 地址
@@ -283,6 +284,8 @@ check_endpoint(){
 
     # 删除 WARP Endpoint IP 优选工具及其附属文件
     rm -f warp ip.txt result.csv
+
+    green "Endpoint IP 最佳值 = $best_endpoint 已设置完毕！"
 }
 
 # 选择 WGCF 安装 / 切换模式
