@@ -291,7 +291,7 @@ select_wgcf(){
     echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
     echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 Wgcf-WARP 双栈模式"
     echo ""
-    read -p "请输入选项 [1-3]:" wgcf_mode
+    read -p "请输入选项 [1-3]: " wgcf_mode
     if [ "$wgcf_mode" = "1" ]; then
         install_wgcf_ipv4
     elif [ "$wgcf_mode" = "2" ]; then
@@ -565,8 +565,8 @@ menu(){
     echo ""
     #ipinfo
     #echo ""
-    read -rp "请输入选项 [0-13]: " menuInput
-    case $menuInput in
+    read -rp "请输入选项 [0-13]: " menu_input
+    case $menu_input in
         1 ) select_wgcf ;;
         2 ) unstwgcf ;;
         3 ) infowpgo ;;
