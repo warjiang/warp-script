@@ -1394,7 +1394,9 @@ wireguard_profile(){
 
         # 用户回显、以及生成二维码
         green "WARP-GO 的 WireGuard 配置文件已提取成功！"
-        yellow "文件已保存至：/root/warpgo-proxy.conf"
+        yellow "文件内容如下，并已保存至：/root/warpgo-proxy.conf"
+        cat /root/warpgo-proxy.conf
+        echo ""
         yellow "节点配置二维码如下所示："
         qrencode -t ansiutf8 < /root/warpgo-proxy.conf
         echo ""
@@ -1405,7 +1407,9 @@ wireguard_profile(){
 
         # 用户回显、以及生成二维码
         green "Wgcf-WARP 的 WireGuard 配置文件已提取成功！"
-        yellow "文件已保存至：/root/wgcf-proxy.conf"
+        yellow "文件内容如下，并已保存至：/root/wgcf-proxy.conf"
+        cat /root/wgcf-proxy.conf
+        echo ""
         yellow "节点配置二维码如下所示："
         qrencode -t ansiutf8 < /root/wgcf-proxy.conf
         echo ""
@@ -1455,6 +1459,9 @@ before_showinfo(){
     provider4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
     provider6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
 
+    # 获取出站 WARP 账户状态
+    check_warp
+
     # 初始化 IPv4 / IPv6 设备名称，默认为未设置
     device4="${RED}未设置${PLAIN}"
     device6="${RED}未设置${PLAIN}"
@@ -1499,6 +1506,7 @@ before_showinfo(){
         quota4="${RED}无限制${PLAIN}"
         account4="${RED}未启用WARP${PLAIN}"
     fi
+
     if [[ $warp_v6 == "plus" ]]; then
         if [[ -n $(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }') ]]; then
             d6=$(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }')
@@ -1507,8 +1515,8 @@ before_showinfo(){
             account6="${GREEN}WARP+${PLAIN}"
         elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "plus" ]]; then
             check_quota
-            quota4="${GREEN} $QUOTA ${PLAIN}"
-            account4="${GREEN}WARP+${PLAIN}"
+            quota6="${GREEN} $QUOTA ${PLAIN}"
+            account6="${GREEN}WARP+${PLAIN}"
         else
             quota6="${RED}无限制${PLAIN}"
             account6="${GREEN}WARP Teams${PLAIN}"
@@ -1538,6 +1546,7 @@ before_showinfo(){
         quota_wireproxy="${RED}无限制${PLAIN}"
         account_wireproxy="${RED}未启动${PLAIN}"
     fi
+
     if [[ $account_cli == "plus" ]]; then
         CHECK_TYPE=1
         check_quota
@@ -1603,16 +1612,16 @@ menu(){
     echo -e "# ${GREEN}YouTube 频道${PLAIN}: https://www.youtube.com/@misaka-blog        #"
     echo "#############################################################"
     echo ""
-    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 WGCF-WARP | ${GREEN}3.${PLAIN} 安装 / 切换 WARP-GO"
-    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 WGCF-WARP${PLAIN} | ${GREEN}4.${PLAIN} ${RED}卸载 WARP-GO${PLAIN}"
-    echo " -------------"
-    echo -e " ${GREEN}5.${PLAIN} 安装 WARP-Cli | ${GREEN}7.${PLAIN} 安装 WireProxy-WARP"
-    echo -e " ${GREEN}6.${PLAIN} ${RED}卸载 WARP-Cli${PLAIN} | ${GREEN}8.${PLAIN} ${RED}卸载 WireProxy-WARP${PLAIN}"
-    echo " -------------"
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 WGCF-WARP          | ${GREEN}3.${PLAIN} 安装 / 切换 WARP-GO"
+    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 WGCF-WARP${PLAIN}                 | ${GREEN}4.${PLAIN} ${RED}卸载 WARP-GO${PLAIN}"
+    echo " -------------------------------------------------------------"
+    echo -e " ${GREEN}5.${PLAIN} 安装 WARP-Cli                  | ${GREEN}7.${PLAIN} 安装 WireProxy-WARP"
+    echo -e " ${GREEN}6.${PLAIN} ${RED}卸载 WARP-Cli${PLAIN}                  | ${GREEN}8.${PLAIN} ${RED}卸载 WireProxy-WARP${PLAIN}"
+    echo " -------------------------------------------------------------"
     echo -e " ${GREEN}9.${PLAIN} 修改 WARP-Cli / WireProxy 端口 | ${GREEN}10.${PLAIN} 开启、关闭或重启 WARP"
-    echo -e " ${GREEN}11.${PLAIN} 提取 WireGuard 配置文件 | ${GREEN}12.${PLAIN} WARP+ 账户刷流量"
-    echo -e " ${GREEN}13.${PLAIN} 切换 WARP 账户类型 | ${GREEN}14.${PLAIN} 从 GitLab 拉取最新脚本"
-    echo " -------------"
+    echo -e " ${GREEN}11.${PLAIN} 提取 WireGuard 配置文件       | ${GREEN}12.${PLAIN} WARP+ 账户刷流量"
+    echo -e " ${GREEN}13.${PLAIN} 切换 WARP 账户类型            | ${GREEN}14.${PLAIN} 从 GitLab 拉取最新脚本"
+    echo " -------------------------------------------------------------"
     echo -e " ${GREEN}0.${PLAIN} 退出脚本"
     echo ""
     show_info
