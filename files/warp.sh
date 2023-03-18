@@ -40,6 +40,348 @@ done
 
 [[ -z $SYSTEM ]] && red "不支持当前VPS系统, 请使用主流的操作系统" && exit 1
 
+# 检查系统内核版本
+main=$(uname -r | awk -F . '{print $1}')
+minor=$(uname -r | awk -F . '{print $2}')
+# 获取系统版本号
+OSID=$(grep -i version_id /etc/os-release | cut -d \" -f2 | cut -d . -f1)
+# 检查VPS虚拟化
+VIRT=$(systemd-detect-virt)
+
+# 删除 WGCF 默认配置文件中的监听 IP
+wg1="sed -i '/0\.0\.0\.0\/0/d' /etc/wireguard/wgcf.conf" # IPv4
+wg2="sed -i '/\:\:\/0/d' /etc/wireguard/wgcf.conf" # IPv6
+
+# 设置 WGCF 配置文件的 DNS 服务器
+wg3="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844/g' /etc/wireguard/wgcf.conf"
+wg4="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
+
+# 设置允许外部 IP 访问
+wg5='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv4
+wg6='sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv6
+wg7='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
+
+# 设置 WARP-GO 配置文件的监听 IP
+wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf' # IPv4
+wgo2='sed -i "s#.*AllowedIPs.*#AllowedIPs = ::/0#g" /opt/warp-go/warp.conf' # IPv6
+wgo3='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0,::/0#g" /opt/warp-go/warp.conf' # 双栈
+
+# 设置允许外部 IP 访问
+wgo4='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf' # IPv4
+wgo5='sed -i "s#.*PostUp.*#PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf' # IPv6
+wgo6='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main; ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main; ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf' # 双栈
+
+# 检测 VPS 处理器架构
+archAffix(){
+    case "$(uname -m)" in
+        x86_64 | amd64 ) echo 'amd64' ;;
+        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
+        s390x ) echo 's390x' ;;
+        * ) red "不支持的CPU架构!" && exit 1 ;;
+    esac
+}
+
+# 检测 VPS 的出站 IP
+check_ip(){
+    ipv4=$(curl -s4m8 ip.p3terx.com | sed -n 1p)
+    ipv6=$(curl -s6m8 ip.p3terx.com | sed -n 1p)
+}
+
+# 检查 VPS 的 IP 形式
+check_stack(){
+    lan4=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
+    lan6=$(ip route get 2606:4700:4700::1111 2>/dev/null | grep -oP 'src \K\S+')
+    if [[ "$lan4" =~ ^([0-9]{1,3}\.){3} ]]; then
+        ping -c2 -W3 1.1.1.1 >/dev/null 2>&1 && out4=1
+    fi
+    if [[ "$lan6" != "::1" && "$lan6" =~ ^([a-f0-9]{1,4}:){2,4}[a-f0-9]{1,4} ]]; then
+        ping6 -c2 -w10 2606:4700:4700::1111 >/dev/null 2>&1 && out6=1
+    fi
+}
+
+# 检测 VPS 的 WARP 状态
+check_warp(){
+    warp_v4=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+    warp_v6=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+}
+
+# 检测 WARP+ 账户流量情况
+check_quota(){
+    if [[ "$CHECK_TYPE" = 1 ]]; then
+        # 如为WARP-Cli，使用其自带接口获取流量
+        QUOTA=$(warp-cli --accept-tos account 2>/dev/null | grep -oP 'Quota: \K\d+')
+    else
+        # 判断为 WGCF 或 WARP-GO，从客户端相应的配置文件中提取
+        if [[ -a "/opt/warp-go/warp-go" ]]; then
+            ACCESS_TOKEN=$(grep 'Token' /opt/warp-go/warp.conf | cut -d= -f2 | sed 's# ##g')
+            DEVICE_ID=$(grep 'Device' /opt/warp-go/warp.conf | cut -d= -f2 | sed 's# ##g')
+        fi
+        if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+            ACCESS_TOKEN=$(grep 'access_token' /etc/wireguard/wgcf-account.toml | cut -d \' -f2)
+            DEVICE_ID=$(grep 'device_id' /etc/wireguard/wgcf-account.toml | cut -d \' -f2)
+        fi
+
+        # 使用API，获取流量信息
+        API=$(curl -s "https://api.cloudflareclient.com/v0a884/reg/$DEVICE_ID" -H "User-Agent: okhttp/3.12.1" -H "Authorization: Bearer $ACCESS_TOKEN")
+        QUOTA=$(grep -oP '"quota":\K\d+' <<< $API)
+    fi
+
+    # 流量单位换算
+    [[ $QUOTA -gt 10000000000000 ]] && QUOTA="$(echo "scale=2; $QUOTA/1000000000000" | bc) TB" || QUOTA="$(echo "scale=2; $QUOTA/1000000000" | bc) GB"
+}
+
+# 检查 TUN 模块是否开启
+check_tun(){
+    TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
+    if [[ ! $TUN =~ "in bad state"|"处于错误状态"|"ist in schlechter Verfassung" ]]; then
+        if [[ $VIRT == lxc ]]; then
+            if [[ $main -lt 5 ]] || [[ $minor -lt 6 ]]; then
+                red "检测到目前VPS未开启TUN模块, 请到后台控制面板处开启"
+                exit 1
+            else
+                return 0
+            fi
+        elif [[ $VIRT == "openvz" ]]; then
+            wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/tun.sh && bash tun.sh
+        else
+            red "检测到目前VPS未开启TUN模块, 请到后台控制面板处开启"
+            exit 1
+        fi
+    fi
+}
+
+# 检查适合 VPS 的最佳 MTU 值
+check_mtu(){
+    yellow "正在检测并设置 MTU 最佳值, 请稍等..."
+    checkv4v6
+    MTUy=1500
+    MTUc=10
+    if [[ -n ${v6} && -z ${v4} ]]; then
+        ping='ping6'
+        IP1='2606:4700:4700::1001'
+        IP2='2001:4860:4860::8888'
+    else
+        ping='ping'
+        IP1='1.1.1.1'
+        IP2='8.8.8.8'
+    fi
+    while true; do
+        if ${ping} -c1 -W1 -s$((${MTUy} - 28)) -Mdo ${IP1} >/dev/null 2>&1 || ${ping} -c1 -W1 -s$((${MTUy} - 28)) -Mdo ${IP2} >/dev/null 2>&1; then
+            MTUc=1
+            MTUy=$((${MTUy} + ${MTUc}))
+        else
+            MTUy=$((${MTUy} - ${MTUc}))
+            if [[ ${MTUc} = 1 ]]; then
+                break
+            fi
+        fi
+        if [[ ${MTUy} -le 1360 ]]; then
+            MTUy='1360'
+            break
+        fi
+    done
+    MTU=$((${MTUy} - 80))
+    if [[ -n $(type -P wgcf) ]]; then
+        sed -i "s/MTU.*/MTU = $MTU/g" wgcf-profile.conf
+    fi
+    
+    if [[ -a "/opt/warp-go/warp-go" ]]; then
+        sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+    fi
+    green "MTU 最佳值 = $MTU 已设置完毕"
+}
+
+# 检查适合 VPS 的最佳 Endpoint IP 地址
+check_endpoint(){
+    yellow "正在检测并设置最佳 Endpoint IP 地址, 请稍等，大约需要1-2分钟..."
+
+    # 下载优选工具软件，感谢某匿名网友的分享
+    wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp
+
+    # 根据 VPS 的出站 IP 情况，生成对应的优选 Endpoint IP 段列表
+    if [[ $menu == 1 ]]; then
+        n=0
+        iplist=100
+        while true; do
+            temp[$n]=$(echo 162.159.192.$(($RANDOM%256)))
+            n=$[$n+1]
+            if [ $n -ge $iplist ]; then
+                break
+            fi
+            temp[$n]=$(echo 162.159.193.$(($RANDOM%256)))
+            n=$[$n+1]
+            if [ $n -ge $iplist ]; then
+                break
+            fi
+            temp[$n]=$(echo 162.159.195.$(($RANDOM%256)))
+            n=$[$n+1]
+            if [ $n -ge $iplist ]; then
+                break
+            fi
+        done
+        while true; do
+            if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+                break
+            else
+                temp[$n]=$(echo 162.159.192.$(($RANDOM%256)))
+                n=$[$n+1]
+            fi
+            if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+                break
+            else
+                temp[$n]=$(echo 162.159.193.$(($RANDOM%256)))
+                n=$[$n+1]
+            fi
+            if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+                break
+            else
+                temp[$n]=$(echo 162.159.195.$(($RANDOM%256)))
+                n=$[$n+1]
+            fi
+        done
+    else
+        n=0
+        iplist=100
+        while true; do
+            temp[$n]=$(echo [2606:4700:d0::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
+            n=$[$n+1]
+            if [ $n -ge $iplist ]; then
+                break
+            fi
+            temp[$n]=$(echo [2606:4700:d1::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
+            n=$[$n+1]
+            if [ $n -ge $iplist ]; then
+                break
+            fi
+        done
+        while true; do
+            if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+                break
+            else
+                temp[$n]=$(echo [2606:4700:d0::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
+                n=$[$n+1]
+            fi
+            if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+                break
+            else
+                temp[$n]=$(echo [2606:4700:d1::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
+                n=$[$n+1]
+            fi
+        done
+    fi
+
+    # 将生成的 IP 段列表放到 ip.txt 里，待程序优选
+    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u > ip.txt
+    
+    # 取消 Linux 自带的线程限制，以便生成优选 Endpoint IP
+    ulimit -n 102400
+
+    # 启动 WARP Endpoint IP 优选工具
+    chmod +x warp && ./warp
+
+    # 将 result.csv 文件的优选 Endpoint IP 提取出来，放置到 best_endpoint 变量中备用
+    best_endpoint=$(cat result.csv | sed -n 2p | awk -F ',' '{print $1}')
+
+    # 删除 WARP Endpoint IP 优选工具及其附属文件
+    rm -f warp ip.txt result.csv
+}
+
+# 选择 WGCF 安装 / 切换模式
+select_wgcf(){
+    yellow "请选择 WGCF 安装/切换的模式"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 Wgcf-WARP 双栈模式"
+    echo ""
+    read -p "请输入选项 [1-3]:" wgcf_mode
+    if [ "$wgcf_mode" = "1" ]; then
+        install_wgcf_ipv4
+    elif [ "$wgcf_mode" = "2" ]; then
+        install_wgcf_ipv6
+    elif [ "$wgcf_mode" = "3" ]; then
+        install_wgcf_dual
+    else
+        red "输入错误，请重新输入"
+        select_wgcf
+    fi
+}
+
+install_wgcf_ipv4(){
+    # 检查 WARP 状态
+    check_warp
+
+    # 因为 WGCF 和 WARP-GO 冲突，故检测 WARP-GO 之后打断安装
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        red "WARP-GO 已安装，请先卸载 WARP-GO"
+        exit 1
+    fi
+
+    # 检查 VPS 的 IP 形式
+    check_stack
+
+    # 根据检测结果，选择适合的模式安装
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        # IPv4 Only
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # IPv6 Only
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        # 双栈
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # NAT IPv4 + IPv6
+    fi
+}
+
+install_wgcf_ipv6(){
+    # 检查 WARP 状态
+    check_warp
+
+    # 因为 WGCF 和 WARP-GO 冲突，故检测 WARP-GO 之后打断安装
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        red "WARP-GO 已安装，请先卸载 WARP-GO"
+        exit 1
+    fi
+
+    # 检查 VPS 的 IP 形式
+    check_stack
+
+    # 根据检测结果，选择适合的模式安装
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        # IPv4 Only
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # IPv6 Only
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        # 双栈
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # NAT IPv4 + IPv6
+    fi
+}
+
+install_wgcf_dual(){
+    # 检查 WARP 状态
+    check_warp
+
+    # 因为 WGCF 和 WARP-GO 冲突，故检测 WARP-GO 之后打断安装
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        red "WARP-GO 已安装，请先卸载 WARP-GO"
+        exit 1
+    fi
+
+    # 检查 VPS 的 IP 形式
+    check_stack
+
+    # 根据检测结果，选择适合的模式安装
+    if [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]]; then
+        # IPv4 Only
+    elif [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # IPv6 Only
+    elif [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]]; then
+        # 双栈
+    elif [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]]; then
+        # NAT IPv4 + IPv6
+    fi
+}
+
 menu(){
     clear
     echo "#############################################################"
@@ -52,8 +394,8 @@ menu(){
     echo -e "# ${GREEN}YouTube 频道${PLAIN}: https://www.youtube.com/@misaka-blog        #"
     echo "#############################################################"
     echo ""
-    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP"
-    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 Wgcf-WARP${PLAIN}"
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 WGCF-WARP"
+    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 WGCF-WARP${PLAIN}"
     echo " -------------"
     echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 WARP-GO"
     echo -e " ${GREEN}4.${PLAIN} ${RED}卸载 WARP-GO${PLAIN}"
