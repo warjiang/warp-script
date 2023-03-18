@@ -1139,6 +1139,8 @@ before_showinfo(){
     check_ip
     country4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
     country6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
+    device4="${RED}未设置${PLAIN}"
+    device6="${RED}未设置${PLAIN}"
     provider4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
     provider6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
 
@@ -1148,21 +1150,21 @@ before_showinfo(){
             d4=$(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }')
             check_quota
             quota4="${GREEN} $QUOTA ${PLAIN}"
-            w4="${GREEN}WARP+${PLAIN}"
+            account4="${GREEN}WARP+${PLAIN}"
         elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "plus" ]]; then
             check_quota
             quota4="${GREEN} $QUOTA ${PLAIN}"
-            w4="${GREEN}WARP+${PLAIN}"
+            account4="${GREEN}WARP+${PLAIN}"
         else
             quota4="${RED}无限制${PLAIN}"
-            w4="${GREEN}WARP Teams${PLAIN}"
+            account4="${GREEN}WARP Teams${PLAIN}"
         fi
     elif [[ $warp_v4 == "on" ]]; then
         quota4="${RED}无限制${PLAIN}"
-        w4="${YELLOW}WARP 免费账户${PLAIN}"
+        account4="${YELLOW}WARP 免费账户${PLAIN}"
     else
         quota4="${RED}无限制${PLAIN}"
-        w4="${RED}未启用WARP${PLAIN}"
+        account4="${RED}未启用WARP${PLAIN}"
     fi
     if [[ $warp_v6 == "plus" ]]; then
         if [[ -n $(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }') ]]; then
@@ -1173,7 +1175,7 @@ before_showinfo(){
         elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "plus" ]]; then
             check_quota
             quota4="${GREEN} $QUOTA ${PLAIN}"
-            w4="${GREEN}WARP+${PLAIN}"
+            account4="${GREEN}WARP+${PLAIN}"
         else
             quota6="${RED}无限制${PLAIN}"
             account6="${GREEN}WARP Teams${PLAIN}"
