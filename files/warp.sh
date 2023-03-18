@@ -348,7 +348,7 @@ install_wgcf_ipv4(){
 
     # 检测是否安装 WGCF，如安装，则切换配置文件。反之执行安装操作
     if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        switch_wgcf
+        switch_wgcf_conf
     else
         install_wgcf
     fi
@@ -393,7 +393,7 @@ install_wgcf_ipv6(){
 
     # 检测是否安装 WGCF，如安装，则切换配置文件。反之执行安装操作
     if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        switch_wgcf
+        switch_wgcf_conf
     else
         install_wgcf
     fi
@@ -438,7 +438,7 @@ install_wgcf_dual(){
 
     # 检测是否安装 WGCF，如安装，则切换配置文件。反之执行安装操作
     if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        switch_wgcf
+        switch_wgcf_conf
     else
         install_wgcf
     fi
@@ -578,7 +578,7 @@ install_wgcf(){
 }
 
 
-switch_wgcf(){
+switch_wgcf_conf(){
     # 关闭 WGCF
     wg-quick down wgcf 2>/dev/null
     systemctl disable wg-quick@wgcf 2>/dev/null
