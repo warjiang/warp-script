@@ -191,7 +191,7 @@ check_mtu(){
 
 # 检查适合 VPS 的最佳 Endpoint IP 地址
 check_endpoint(){
-    yellow "正在检测并设置最佳 Endpoint IP 地址, 请稍等，大约需要1-2分钟..."
+    yellow "正在检测并设置最佳 Endpoint IP 地址，请稍等，大约需要1-2分钟..."
 
     # 下载优选工具软件，感谢某匿名网友的分享
     wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp >/dev/null 2>&1
@@ -556,8 +556,20 @@ switch_wgcf(){
     wg-quick down wgcf 2>/dev/null
     systemctl disable wg-quick@wgcf 2>/dev/null
 
+    # 删除配置好的 WGCF WireGuard 配置文件，并重新从 wgcf-profile.conf 拉取
+    rm -rf /etc/wireguard/wgcf.conf
+    cp -f /etc/wireguard/wgcf-profile.conf /etc/wireguard/wgcf.conf >/dev/null 2>&1
+
     # 设置 WGCF 的 WireGuard 配置文件
     conf_wgcf
+
+    # 检查最佳 MTU 值，并应用至 WGCF 配置文件
+    check_mtu
+    sed -i "s/MTU.*/MTU = $MTU/g" /etc/wireguard/wgcf.conf
+
+    # 优选 EndPoint IP，并应用至 WGCF 配置文件
+    check_endpoint
+    sed -i "s/engage.cloudflareclient.com:2408/$best_endpoint/g" /etc/wireguard/wgcf.conf
 
     # 启动 WGCF，并检查 WGCF 是否启动成功
     check_wgcf
