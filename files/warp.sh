@@ -156,7 +156,7 @@ check_mtu(){
     checkv4v6
     MTUy=1500
     MTUc=10
-    if [[ -n ${v6} && -z ${v4} ]]; then
+    if [[ -n ${ipv6} && -z ${ipv4} ]]; then
         ping='ping6'
         IP1='2606:4700:4700::1001'
         IP2='2001:4860:4860::8888'
@@ -196,7 +196,9 @@ check_endpoint(){
     wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp
 
     # 根据 VPS 的出站 IP 情况，生成对应的优选 Endpoint IP 段列表
-    if [[ $menu == 1 ]]; then
+    check_ip
+
+    if [[ -n $ipv4 ]]; then
         n=0
         iplist=100
         while true; do
@@ -524,7 +526,7 @@ install_wgcf(){
 
     # 优选 EndPoint IP，并应用至 WGCF 配置文件
     check_endpoint
-    sed -i "s/engage.cloudflareclient.com/$best_endpoint/g" /etc/wireguard/wgcf.conf
+    sed -i "s/engage.cloudflareclient.com:2408/$best_endpoint/g" /etc/wireguard/wgcf.conf
 
     # 检查 WGCF 是否启动成功
     check_wgcf
