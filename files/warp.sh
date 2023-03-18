@@ -83,8 +83,8 @@ archAffix(){
 
 # 检测 VPS 的出站 IP
 check_ip(){
-    ipv4=$(curl -s4m8 ip.p3terx.com | sed -n 1p)
-    ipv6=$(curl -s6m8 ip.p3terx.com | sed -n 1p)
+    ipv4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*ip\":[ ]*\"\([^"]*\).*')
+    ipv6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*ip\":[ ]*\"\([^"]*\).*')
 }
 
 # 检测 VPS 的 IP 形式
@@ -1134,6 +1134,78 @@ uninstall_wireproxy(){
     green "WireProxy-WARP代理模式已彻底卸载成功!"
 }
 
+before_showinfo(){
+    yellow "请等待，正在检测 VPS 以及 WARP 状态..."
+    check_ip
+    country4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
+    country6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
+    provider4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
+    provider6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
+
+    # 获取 WARP 账户状态、设备名称和剩余流量，并返回至用户回显
+    if [[ $warp_v4 == "plus" ]]; then
+        if [[ -n $(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }') ]]; then
+            d4=$(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }')
+            check_quota
+            quota4="${GREEN} $QUOTA ${PLAIN}"
+            w4="${GREEN}WARP+${PLAIN}"
+        elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "plus" ]]; then
+            check_quota
+            quota4="${GREEN} $QUOTA ${PLAIN}"
+            w4="${GREEN}WARP+${PLAIN}"
+        else
+            quota4="${RED}无限制${PLAIN}"
+            w4="${GREEN}WARP Teams${PLAIN}"
+        fi
+    elif [[ $warp_v4 == "on" ]]; then
+        quota4="${RED}无限制${PLAIN}"
+        w4="${YELLOW}WARP 免费账户${PLAIN}"
+    else
+        quota4="${RED}无限制${PLAIN}"
+        w4="${RED}未启用WARP${PLAIN}"
+    fi
+    if [[ $warp_v6 == "plus" ]]; then
+        if [[ -n $(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }') ]]; then
+            d6=$(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }')
+            check_quota
+            quota6="${GREEN} $QUOTA ${PLAIN}"
+            account6="${GREEN}WARP+${PLAIN}"
+        elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "plus" ]]; then
+            check_quota
+            quota4="${GREEN} $QUOTA ${PLAIN}"
+            w4="${GREEN}WARP+${PLAIN}"
+        else
+            quota6="${RED}无限制${PLAIN}"
+            account6="${GREEN}WARP Teams${PLAIN}"
+        fi
+    elif [[ $warp_v6 == "on" ]]; then
+        quota6="${RED}无限制${PLAIN}"
+        account6="${YELLOW}WARP 免费账户${PLAIN}"
+    else
+        quota6="${RED}无限制${PLAIN}"
+        account6="${RED}未启用WARP${PLAIN}"
+    fi
+}
+
+show_info(){
+    echo "----------------------------------------------------------------------------"
+    if [[ -n $ipv4 ]]; then
+        echo -e "IPv4 地址：$ipv4  地区：$country4  设备名称：$device4"
+        echo -e "提供商：$provider4  WARP 账户状态：$account4  剩余流量：$quota4"
+
+    else
+        echo -e "IPv4 出站状态：${RED}未启用${PLAIN}"
+    fi
+    if [[ -n $ipv6 ]]; then
+        echo -e "IPv4 地址：$ipv6  地区：$country6  设备名称：$device6"
+        echo -e "提供商：$provider6  WARP 账户状态：$account6  剩余流量：$quota6"
+
+    else
+        echo -e "IPv4 出站状态：${RED}未启用${PLAIN}"
+    fi
+    echo "----------------------------------------------------------------------------"
+}
+
 menu(){
     clear
     echo "#############################################################"
@@ -1167,8 +1239,8 @@ menu(){
     echo " -------------"
     echo -e " ${GREEN}0.${PLAIN} 退出脚本"
     echo ""
-    #ipinfo
-    #echo ""
+    show_info
+    echo ""
     read -rp "请输入选项 [0-13]: " menu_input
     case $menu_input in
         1 ) select_wgcf ;;
@@ -1188,4 +1260,5 @@ menu(){
     esac
 }
 
+before_showinfo
 menu
