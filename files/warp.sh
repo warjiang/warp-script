@@ -337,7 +337,12 @@ install_wgcf_ipv4(){
         wgcf1=$wg2 && wgcf2=$wg4 && wgcf3=$wg5
     fi
 
-    install_wgcf
+    # 检测是否安装 WGCF，如安装，则切换配置文件。反之执行安装操作
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        switch_wgcf
+    else
+        install_wgcf
+    fi
 }
 
 install_wgcf_ipv6(){
@@ -368,7 +373,12 @@ install_wgcf_ipv6(){
         wgcf1=$wg1 && wgcf2=$wg4 && wgcf3=$wg6
     fi
 
-    install_wgcf
+    # 检测是否安装 WGCF，如安装，则切换配置文件。反之执行安装操作
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        switch_wgcf
+    else
+        install_wgcf
+    fi
 }
 
 install_wgcf_dual(){
@@ -399,7 +409,12 @@ install_wgcf_dual(){
         wgcf1=$wg4 && wgcf2=$wg6
     fi
 
-    install_wgcf
+    # 检测是否安装 WGCF，如安装，则切换配置文件。反之执行安装操作
+    if [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        switch_wgcf
+    else
+        install_wgcf
+    fi
 }
 
 # 下载 WGCF
@@ -531,7 +546,20 @@ install_wgcf(){
     check_endpoint
     sed -i "s/engage.cloudflareclient.com:2408/$best_endpoint/g" /etc/wireguard/wgcf.conf
 
-    # 检查 WGCF 是否启动成功
+    # 启动 WGCF，并检查 WGCF 是否启动成功
+    check_wgcf
+}
+
+
+switch_wgcf(){
+    # 关闭 WGCF
+    wg-quick down wgcf 2>/dev/null
+    systemctl disable wg-quick@wgcf 2>/dev/null
+
+    # 设置 WGCF 的 WireGuard 配置文件
+    conf_wgcf
+
+    # 启动 WGCF，并检查 WGCF 是否启动成功
     check_wgcf
 }
 
