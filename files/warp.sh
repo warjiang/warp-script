@@ -191,9 +191,9 @@ check_mtu(){
 
 # 检查适合 VPS 的最佳 Endpoint IP 地址
 check_endpoint(){
-    yellow "正在检测并设置最佳 Endpoint IP 地址，请稍等，大约需要1-2分钟..."
+    yellow "正在检测并设置最佳 Endpoint IP 地址，请稍等，大约需要 1-2 分钟..."
 
-    # 下载优选工具软件，感谢某匿名网友的分享
+    # 下载优选工具软件，感谢某匿名网友的分享的优选工具
     wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp >/dev/null 2>&1
 
     # 根据 VPS 的出站 IP 情况，生成对应的优选 Endpoint IP 段列表
@@ -313,6 +313,15 @@ install_wgcf_ipv4(){
     # 检查 WARP 状态
     check_warp
 
+    # 如启动 WARP，则关闭
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-gp
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
+
     # 因为 WGCF 和 WARP-GO 冲突，故检测 WARP-GO 之后打断安装
     if [[ -f "/opt/warp-go/warp-go" ]]; then
         red "WARP-GO 已安装，请先卸载 WARP-GO"
@@ -349,6 +358,15 @@ install_wgcf_ipv6(){
     # 检查 WARP 状态
     check_warp
 
+    # 如启动 WARP，则关闭
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-gp
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
+
     # 因为 WGCF 和 WARP-GO 冲突，故检测 WARP-GO 之后打断安装
     if [[ -f "/opt/warp-go/warp-go" ]]; then
         red "WARP-GO 已安装，请先卸载 WARP-GO"
@@ -384,6 +402,15 @@ install_wgcf_ipv6(){
 install_wgcf_dual(){
     # 检查 WARP 状态
     check_warp
+
+    # 如启动 WARP，则关闭
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-gp
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
 
     # 因为 WGCF 和 WARP-GO 冲突，故检测 WARP-GO 之后打断安装
     if [[ -f "/opt/warp-go/warp-go" ]]; then
