@@ -1198,12 +1198,13 @@ show_info(){
     else
         echo -e "IPv4 出站状态：${RED}未启用${PLAIN}"
     fi
+    echo "----------------------------------------------------------------------------"
     if [[ -n $ipv6 ]]; then
-        echo -e "IPv4 地址：$ipv6  地区：$country6  设备名称：$device6"
+        echo -e "IPv6 地址：$ipv6  地区：$country6  设备名称：$device6"
         echo -e "提供商：$provider6  WARP 账户状态：$account6  剩余流量：$quota6"
 
     else
-        echo -e "IPv4 出站状态：${RED}未启用${PLAIN}"
+        echo -e "IPv6 出站状态：${RED}未启用${PLAIN}"
     fi
     echo "----------------------------------------------------------------------------"
 }
