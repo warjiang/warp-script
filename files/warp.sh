@@ -1482,6 +1482,16 @@ wgcf_account() {
         # 关闭 WGCF
         wg-quick down wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
+
+        # 删除原来的账号及 WireGuard 配置文件
+        rm -f /etc/wireguard/wgcf-account.toml /etc/wireguard/wgcf-profile.conf
+
+        # 在 WGCF 处注册账户
+        register_wgcf
+
+        # 移动新的账号及 WireGuard 配置文件
+        mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
+        mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
     fi
 }
 
