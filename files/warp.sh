@@ -1459,15 +1459,38 @@ wgcf_account() {
     echo ""
     read -p "请输入选项 [1-3]: " account_type
     if [[ $account_type == 2 ]]; then
-
+        # 关闭 WGCF
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
     elif [[ $account_type == 3 ]]; then
-
+        # 关闭 WGCF
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
     else
-
+        # 关闭 WGCF
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
     fi
 }
 
 wpgo_account() {
+    # 检查 VPS 的 IP 形式（如有 WARP 开启则关闭，待检测完再开）
+    check_warp
+    if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
+        systemctl stop warp-go
+        check_stack
+        systemctl start warp-go
+    else
+        check_stack
+    fi
+
+    # 获取目前 WARP-GO 文件的 IP 出站、允许外部 IP 信息，备用
+    current_allowips=$(cat /opt/warp-go/warp.conf | grep AllowedIPs)
+    [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo4
+    [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo5
+    [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo6
+    [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo6
+
     yellow "请选择需要切换的 WARP 账户类型"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} WARP 免费账户 ${YELLOW}(默认)${PLAIN}"
@@ -1475,19 +1498,50 @@ wpgo_account() {
     echo -e " ${GREEN}3.${PLAIN} WARP Teams"
     echo ""
     read -p "请输入选项 [1-3]: " account_type
-    if [[ $account_type == 2 ]]; then
 
+    if [[ $account_type == 2 ]]; then
+        # 关闭 WARP-GO
+        systemctl stop warp-go
     elif [[ $account_type == 3 ]]; then
+        # 关闭 WARP-GO
+        systemctl stop warp-go
+
         # 询问用户 WARP Teams 账户 TOKEN
         yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
         read -rp "请输入 WARP Teams 账户的 TOKEN：" teamstoken
     else
-
+        # 关闭 WARP-GO
+        systemctl stop warp-go
     fi
 }
 
 warp_cli_account() {
+    # 关闭 WARP-Cli
+    warp-cli --accept-tos disconnect >/dev/null 2>&1
+    warp-cli --accept-tos register >/dev/null 2>&1
 
+    # 询问用户获取 WARP 账户许可证密钥
+    yellow "获取CloudFlare WARP账号密钥信息方法: "
+    green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+    green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+    echo ""
+    yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+    read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+    until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+        red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+    done
+
+    # 设置 WARP 账户许可证密钥并连接
+    warp-cli --accept-tos set-license "$warpkey" >/dev/null 2>&1 && sleep 1
+    warp-cli --accept-tos connect >/dev/null 2>&1
+
+    # 检查账户是否升级成功，如未升级成功则提示使用免费账户
+    if [[ $(warp-cli --accept-tos account) =~ Limited ]]; then
+        green "WARP-Cli 账户类型切换为 WARP+ 成功！"
+    else
+        red "WARP+ 账户启用失败, 已自动降级至 WARP 免费版账户"
+    fi
 }
 
 wireproxy_account() {
@@ -1499,11 +1553,17 @@ wireproxy_account() {
     echo ""
     read -p "请输入选项 [1-3]: " account_type
     if [[ $account_type == 2 ]]; then
-
+        # 关闭 WireProxy
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
     elif [[ $account_type == 3 ]]; then
-
+        # 关闭 WireProxy
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
     else
-
+        # 关闭 WireProxy
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
     fi
 }
 
