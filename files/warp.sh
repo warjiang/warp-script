@@ -483,6 +483,7 @@ check_wgcf(){
         check_warp
         if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
             green "WGCF-WARP 已启动成功！"
+            before_showinfo && show_info
             break
         else
             red "WGCF-WARP 启动失败！"
@@ -628,6 +629,7 @@ uninstall_wgcf(){
     fi
 
     green "Wgcf-WARP 已彻底卸载成功!"
+    before_showinfo && show_info
 }
 
 # 设置 WARP-GO 配置文件
@@ -649,6 +651,7 @@ check_wpgo(){
         sleep 5
         if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
             green "WARP-GO 已启动成功！"
+            before_showinfo && show_info
             break
         else
             red "WARP-GO 启动失败！"
@@ -996,6 +999,7 @@ install_warp_cli(){
         exit 1
     else
         green "WARP-Cli 代理模式已启动成功！"
+        before_showinfo && show_info
     fi
 }
 
@@ -1010,6 +1014,7 @@ uninstall_warp_cli(){
     ${PACKAGE_UNINSTALL[int]} cloudflare-warp
 
     green "WARP-Cli客户端已彻底卸载成功!"
+    before_showinfo && show_info
 }
 
 install_wireproxy(){
@@ -1052,11 +1057,29 @@ install_wireproxy(){
         mkdir /etc/wireguard
     fi
 
+    # 先关闭 WGCF 或者是 WARP-GO（如有），以免影响检查最佳 MTU 值及优选 EndPoint IP
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl stop warp-go
+        systemctl disable warp-go
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf
+    fi
+
     # 检查最佳 MTU 值
     check_mtu
 
     # 优选 EndPoint IP
     check_endpoint
+
+    # 启动 WGCF 或者是 WARP-GO（如有）
+    if [[ -f "/opt/warp-go/warp-go" ]]; then
+        systemctl start warp-go
+        systemctl enable warp-go
+    elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
+        wg-quick start wgcf >/dev/null 2>&1
+        systemctl enable wg-quick@wgcf
+    fi
     
     # 应用 WireProxy 配置文件，并将 WGCF 配置文件移至 /etc/wireguard 文件夹，以备安装 WGCF-WARP 使用
     cat <<EOF > /etc/wireguard/proxy.conf
@@ -1116,6 +1139,7 @@ TEXT
     sleep 5
     systemctl enable wireproxy-warp >/dev/null 2>&1
     green "WireProxy-WARP 代理模式已启动成功!"
+    before_showinfo && show_info
 }
 
 uninstall_wireproxy(){
@@ -1132,6 +1156,7 @@ uninstall_wireproxy(){
     fi
 
     green "WireProxy-WARP代理模式已彻底卸载成功!"
+    before_showinfo && show_info
 }
 
 before_showinfo(){
