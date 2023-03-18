@@ -1641,6 +1641,7 @@ menu(){
         11 ) wireguard_profile ;;
         12 ) warp_traffic ;;
         13 ) warpaccount ;;
+        14 ) wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash warp.sh ;;
         * ) exit 1 ;;
     esac
 }
