@@ -1449,6 +1449,17 @@ warp_traffic(){
     green "创建刷 WARP+ 流量任务成功！ Screen会话名称为：$screenname"
 }
 
+warp_account(){
+    yellow "请选择需要切换账户的 WARP 客户端"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WGCF"
+    echo -e " ${GREEN}2.${PLAIN} WARP-GO"
+    echo -e " ${GREEN}3.${PLAIN} WARP-Cli ${RED}(仅支持升级至 WARP+)${PLAIN}"
+    echo -e " ${GREEN}4.${PLAIN} WireProxy"
+    echo ""
+    read -p "请输入选项 [1-4]: " account_mode
+}
+
 before_showinfo(){
     yellow "请等待，正在检测 VPS 以及 WARP 状态..."
 
