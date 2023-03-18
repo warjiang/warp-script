@@ -188,7 +188,7 @@ check_mtu(){
 
 # 检查适合 VPS 的最佳 Endpoint IP 地址
 check_endpoint(){
-    yellow "正在检测并设置最佳 Endpoint IP 地址，请稍等，大约需要 1-2 分钟..."
+    yellow "正在检测并设置最佳 Endpoint IP，请稍等，大约需要 1-2 分钟..."
 
     # 下载优选工具软件，感谢某匿名网友的分享的优选工具
     wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-linux-$(archAffix) -O warp >/dev/null 2>&1
@@ -282,7 +282,7 @@ check_endpoint(){
     # 删除 WARP Endpoint IP 优选工具及其附属文件
     rm -f warp ip.txt result.csv
 
-    green "Endpoint IP 最佳值 = $best_endpoint 已设置完毕！"
+    green "最佳 Endpoint IP = $best_endpoint 已设置完毕！"
 }
 
 # 选择 WGCF 安装 / 切换模式
