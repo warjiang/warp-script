@@ -567,7 +567,7 @@ menu(){
     #echo ""
     read -rp "请输入选项 [0-13]: " menuInput
     case $menuInput in
-        1 ) wgcf_mode ;;
+        1 ) select_wgcf ;;
         2 ) unstwgcf ;;
         3 ) infowpgo ;;
         4 ) unstwpgo ;;
