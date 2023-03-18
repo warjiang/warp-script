@@ -1136,7 +1136,7 @@ uninstall_wireproxy(){
 
 before_showinfo(){
     yellow "请等待，正在检测 VPS 以及 WARP 状态..."
-    
+
     # 获取出站 IPv4 / IPv6 的地址、提供商
     check_ip
     country4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
@@ -1147,6 +1147,24 @@ before_showinfo(){
     # 初始化 IPv4 / IPv6 设备名称，默认为未设置
     device4="${RED}未设置${PLAIN}"
     device6="${RED}未设置${PLAIN}"
+
+    # 获取 WARP-Cli 和 WireProxy 的 socks5 端口
+    cli_port=$(warp-cli --accept-tos settings 2>/dev/null | grep 'WarpProxy on port' | awk -F "port " '{print $2}')
+    wireproxy_port=$(grep BindAddress /etc/wireguard/proxy.conf 2>/dev/null | sed "s/BindAddress = 127.0.0.1://g")
+
+    # 如获取到 WARP-Cli 和 WireProxy 的 socks5 端口，则获取其的 IP 的地址、提供商、WARP状态信息
+    if [[ -n $cli_port ]]; then
+        account_cli=$(curl -sx socks5h://localhost:$cli_port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        country_cli=$(expr "$(curl -sx socks5h://localhost:$cli_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*country\":[ ]*\"\([^"]*\).*')
+        ip_cli=$(expr "$(curl -sx socks5h://localhost:$cli_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*ip\":[ ]*\"\([^"]*\).*')
+        provider_cli=$(expr "$(curl -sx socks5h://localhost:$cli_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*isp\":[ ]*\"\([^"]*\).*')
+    fi
+    if [[ -n $wireproxy_port ]]; then
+        account_wireproxy=$(curl -sx socks5h://localhost:$wireproxy_port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        country_wireproxy=$(expr "$(curl -sx socks5h://localhost:$wireproxy_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*country\":[ ]*\"\([^"]*\).*')
+        ip_wireproxy=$(expr "$(curl -sx socks5h://localhost:$wireproxy_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*ip\":[ ]*\"\([^"]*\).*')
+        provider_wireproxy=$(expr "$(curl -sx socks5h://localhost:$wireproxy_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*isp\":[ ]*\"\([^"]*\).*')
+    fi
 
     # 获取 WARP 账户状态、设备名称和剩余流量，并返回至用户回显
     if [[ $warp_v4 == "plus" ]]; then
@@ -1191,6 +1209,36 @@ before_showinfo(){
         quota6="${RED}无限制${PLAIN}"
         account6="${RED}未启用WARP${PLAIN}"
     fi
+
+    if [[ $account_wireproxy == "plus" ]]; then
+        if [[ -n $(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }') ]]; then
+            device_wireproxy=$(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }')
+            check_quota
+            quota_wireproxy="${GREEN} $QUOTA ${PLAIN}"
+            account_wireproxy="${GREEN}WARP+${PLAIN}"
+        else
+            quota_wireproxy="${RED}无限制${PLAIN}"
+            account_wireproxy="${GREEN}WARP Teams${PLAIN}"
+        fi
+    elif [[ $account_wireproxy == "on" ]]; then
+        quota_wireproxy="${RED}无限制${PLAIN}"
+        account_wireproxy="${YELLOW}WARP 免费账户${PLAIN}"
+    else
+        quota_wireproxy="${RED}无限制${PLAIN}"
+        account_wireproxy="${RED}未启动${PLAIN}"
+    fi
+    if [[ $account_cli == "plus" ]]; then
+        CHECK_TYPE=1
+        check_quota
+        quota_cli="${GREEN} $QUOTA ${PLAIN}"
+        account_cli="${GREEN}WARP+${PLAIN}"
+    elif [[ $account_cli == "on" ]]; then
+        quota_cli="${RED}无限制${PLAIN}"
+        account_cli="${YELLOW}WARP 免费账户${PLAIN}"
+    else
+        quota_cli="${RED}无限制${PLAIN}"
+        account_cli="${RED}未启动${PLAIN}"
+    fi
 }
 
 show_info(){
@@ -1209,6 +1257,24 @@ show_info(){
 
     else
         echo -e "IPv6 出站状态：${RED}未启用${PLAIN}"
+    fi
+    echo "----------------------------------------------------------------------------"
+    if [[ -n $cli_port ]]; then
+        echo -e "WARP-Cli代理端口: 127.0.0.1:$cli_port  状态: $account_cli  剩余流量：$quota_cli"
+        if [[ -n $ip_cli ]]; then
+            echo -e "IP: $ip_cli  地区: $country_cli  提供商：$provider_cli"
+        fi
+    else
+        echo -e "WARP-Cli 出站状态：${RED}未安装${PLAIN}"
+    fi
+    echo "----------------------------------------------------------------------------"
+    if [[ -n $wireproxy_port ]]; then
+        echo -e "WireProxy-WARP代理端口: 127.0.0.1:$wireproxy_port  状态: $account_wireproxy  剩余流量：$quota_wireproxy"
+        if [[ -n $ip_wireproxy ]]; then
+            echo -e "IP: $ip_wireproxy  地区: $country_wireproxy  提供商：$provider_wireproxy"
+        fi
+    else
+        echo -e "WireProxy 出站状态：${RED}未安装${PLAIN}"
     fi
     echo "----------------------------------------------------------------------------"
 }
