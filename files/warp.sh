@@ -287,7 +287,7 @@ check_endpoint(){
 
 # 选择 WGCF 安装 / 切换模式
 select_wgcf(){
-    yellow "请选择 WGCF 安装/切换的模式"
+    yellow "请选择 WGCF 安装 / 切换的模式"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
     echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
@@ -670,7 +670,7 @@ check_wpgo(){
 
 # 选择 WARP-GO 安装 / 切换模式
 select_wpgo(){
-    yellow "请选择 WGCF 安装/切换的模式"
+    yellow "请选择 WGCF 安装 / 切换的模式"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
     echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
