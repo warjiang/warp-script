@@ -1136,10 +1136,6 @@ uninstall_wireproxy(){
 
 before_showinfo(){
     yellow "请等待，正在检测 VPS 以及 WARP 状态..."
-
-    # 初始化 IPv4 / IPv6 设备名称，默认为未设置
-    device4="${RED}未设置${PLAIN}"
-    device6="${RED}未设置${PLAIN}"
     
     # 获取出站 IPv4 / IPv6 的地址、提供商
     check_ip
@@ -1147,6 +1143,10 @@ before_showinfo(){
     country6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
     provider4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
     provider6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
+
+    # 初始化 IPv4 / IPv6 设备名称，默认为未设置
+    device4="${RED}未设置${PLAIN}"
+    device6="${RED}未设置${PLAIN}"
 
     # 获取 WARP 账户状态、设备名称和剩余流量，并返回至用户回显
     if [[ $warp_v4 == "plus" ]]; then
