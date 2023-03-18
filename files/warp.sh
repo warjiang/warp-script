@@ -1462,6 +1462,18 @@ wgcf_account() {
         # 关闭 WGCF
         wg-quick down wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
+
+        # 询问用户获取 WARP 账户许可证密钥
+        yellow "获取CloudFlare WARP账号密钥信息方法: "
+        green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+        green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+        echo ""
+        yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+            red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+            read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        done
     elif [[ $account_type == 3 ]]; then
         # 关闭 WGCF
         wg-quick down wgcf >/dev/null 2>&1
@@ -1502,6 +1514,18 @@ wpgo_account() {
     if [[ $account_type == 2 ]]; then
         # 关闭 WARP-GO
         systemctl stop warp-go
+
+        # 询问用户获取 WARP 账户许可证密钥
+        yellow "获取CloudFlare WARP账号密钥信息方法: "
+        green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+        green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+        echo ""
+        yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+            red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+            read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        done
     elif [[ $account_type == 3 ]]; then
         # 关闭 WARP-GO
         systemctl stop warp-go
