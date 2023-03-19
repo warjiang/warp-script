@@ -1618,11 +1618,9 @@ wireproxy_account() {
         mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
         mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
 
-        # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 文件中对应的内容
-        private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
+        # 获取私钥，用于替换 wgcf.conf 文件中对应的内容
         private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
-        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
     fi
 }
 
