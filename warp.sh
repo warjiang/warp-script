@@ -2053,10 +2053,10 @@ before_showinfo() {
     [[ $(curl -s4m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt4="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
     [[ $(curl -s6m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt6="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt6="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
     if [[ -n $cli_port ]]; then
-        [[ $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] chatgpt_cli="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+        [[ $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_cli="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
     fi
     if [[ -n $wireproxy_port ]]; then
-        [[ $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] chatgpt_wireproxy="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+        [[ $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_wireproxy="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
     fi
 }
 
