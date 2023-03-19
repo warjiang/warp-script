@@ -1607,6 +1607,22 @@ wireproxy_account() {
         # 关闭 WireProxy
         systemctl stop wireproxy-warp
         systemctl disable wireproxy-warp
+
+        # 删除原来的账号及 WireGuard 配置文件
+        rm -f /etc/wireguard/wgcf-account.toml /etc/wireguard/wgcf-profile.conf
+
+        # 在 WGCF 处注册账户
+        register_wgcf
+
+        # 移动新的账号及 WireGuard 配置文件
+        mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
+        mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
+
+        # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 文件中对应的内容
+        private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
+        private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
     fi
 }
 
