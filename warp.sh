@@ -2018,6 +2018,19 @@ before_showinfo() {
         account6="${RED}未启用WARP${PLAIN}"
     fi
 
+    if [[ $account_cli == "plus" ]]; then
+        CHECK_TYPE=1
+        check_quota
+        quota_cli="${GREEN} $QUOTA ${PLAIN}"
+        account_cli="${GREEN}WARP+${PLAIN}"
+    elif [[ $account_cli == "on" ]]; then
+        quota_cli="${RED}无限制${PLAIN}"
+        account_cli="${YELLOW}WARP 免费账户${PLAIN}"
+    else
+        quota_cli="${RED}无限制${PLAIN}"
+        account_cli="${RED}未启动${PLAIN}"
+    fi
+
     if [[ $account_wireproxy == "plus" ]]; then
         if [[ -n $(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }') ]]; then
             device_wireproxy=$(grep -s 'Device name' /etc/wireguard/info.log | awk '{ print $NF }')
@@ -2036,17 +2049,14 @@ before_showinfo() {
         account_wireproxy="${RED}未启动${PLAIN}"
     fi
 
-    if [[ $account_cli == "plus" ]]; then
-        CHECK_TYPE=1
-        check_quota
-        quota_cli="${GREEN} $QUOTA ${PLAIN}"
-        account_cli="${GREEN}WARP+${PLAIN}"
-    elif [[ $account_cli == "on" ]]; then
-        quota_cli="${RED}无限制${PLAIN}"
-        account_cli="${YELLOW}WARP 免费账户${PLAIN}"
-    else
-        quota_cli="${RED}无限制${PLAIN}"
-        account_cli="${RED}未启动${PLAIN}"
+    # 测试 ChatGPT 解锁情况，参考：https://github.com/missuo/OpenAI-Checker
+    [[ $(curl -s4m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt4="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+    [[ $(curl -s6m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt6="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt6="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+    if [[ -n $cli_port ]]; then
+        [[ $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] chatgpt_cli="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+    fi
+    if [[ -n $wireproxy_port ]]; then
+        [[ $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] chatgpt_wireproxy="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
     fi
 }
 
@@ -2055,7 +2065,7 @@ show_info() {
     if [[ -n $ipv4 ]]; then
         echo -e "IPv4 地址：$ipv4  地区：$country4  设备名称：$device4"
         echo -e "提供商：$provider4  WARP 账户状态：$account4  剩余流量：$quota4"
-
+        echo -e "ChatGPT 状态：$chatgpt4"
     else
         echo -e "IPv4 出站状态：${RED}未启用${PLAIN}"
     fi
@@ -2063,7 +2073,7 @@ show_info() {
     if [[ -n $ipv6 ]]; then
         echo -e "IPv6 地址：$ipv6  地区：$country6  设备名称：$device6"
         echo -e "提供商：$provider6  WARP 账户状态：$account6  剩余流量：$quota6"
-
+        echo -e "ChatGPT 状态：$chatgpt6"
     else
         echo -e "IPv6 出站状态：${RED}未启用${PLAIN}"
     fi
@@ -2072,6 +2082,7 @@ show_info() {
         echo -e "WARP-Cli代理端口: 127.0.0.1:$cli_port  状态: $account_cli  剩余流量：$quota_cli"
         if [[ -n $ip_cli ]]; then
             echo -e "IP: $ip_cli  地区: $country_cli  提供商：$provider_cli"
+            echo -e "ChatGPT 状态：$chatgpt_cli"
         fi
     else
         echo -e "WARP-Cli 出站状态：${RED}未安装${PLAIN}"
@@ -2081,6 +2092,7 @@ show_info() {
         echo -e "WireProxy-WARP代理端口: 127.0.0.1:$wireproxy_port  状态: $account_wireproxy  剩余流量：$quota_wireproxy"
         if [[ -n $ip_wireproxy ]]; then
             echo -e "IP: $ip_wireproxy  地区: $country_wireproxy  提供商：$provider_wireproxy"
+            echo -e "ChatGPT 状态：$chatgpt_wireproxy"
         fi
     else
         echo -e "WireProxy 出站状态：${RED}未安装${PLAIN}"
