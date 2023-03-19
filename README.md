@@ -8,6 +8,14 @@ CloudFlare WARP 一键管理脚本
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash warp.sh
 ```
 
+## 对于直接使用 WireGuard WARP 节点的
+
+可使用下面两个网站的其中之一提取
+
+WGCF：https://replit.com/@misaka-blog/wgcf-profile-generator
+
+WARP-GO：https://replit.com/@misaka-blog/warpgo-profile-generator
+
 ## 常见问题
 
 待收集汇总补充
@@ -16,7 +24,7 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash wa
 
 Wgcf 和 WARP-GO 都是第三方的 CloudFlare WARP 的 Linux 应用程序。由于 Wgcf 在香港、美西区域遭到 CloudFlare 的官方限制，故只能使用 WARP-GO
 
-对于大部分区域的建议：Wgcf > WARP-GO
+对于没遭到 CloudFlare 封禁的大部分区域的建议：Wgcf > WARP-GO
 
 ### 2. 在 vpsfree.es 安装 Wgcf-WARP
 
@@ -31,7 +39,7 @@ wg-quick up wgcf
 curl -4 ip.p3terx.com
 ```
 
-待出现104或8开头的IP即为成功
+待出现 104 或 8 开头的 IP 即为成功
 
 ## 鸣谢项目
 
@@ -39,6 +47,7 @@ curl -4 ip.p3terx.com
 * CloudFlare WARP：https://one.one.one.one/
 * Wgcf：https://github.com/ViRb3/wgcf
 * WARP-GO：https://gitlab.com/ProjectWARP/warp-go
+* 某匿名大佬的 CloudFlare WARP EndPoint IP 优选工具
 
 ## 赞助
 
