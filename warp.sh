@@ -5,15 +5,15 @@ GREEN="\033[32m"
 YELLOW="\033[33m"
 PLAIN='\033[0m'
 
-red(){
+red() {
     echo -e "\033[31m\033[01m$1\033[0m"
 }
 
-green(){
+green() {
     echo -e "\033[32m\033[01m$1\033[0m"
 }
 
-yellow(){
+yellow() {
     echo -e "\033[33m\033[01m$1\033[0m"
 }
 
@@ -50,45 +50,45 @@ VIRT=$(systemd-detect-virt)
 
 # 删除 WGCF 默认配置文件中的监听 IP
 wg1="sed -i '/0\.0\.0\.0\/0/d' /etc/wireguard/wgcf.conf" # IPv4
-wg2="sed -i '/\:\:\/0/d' /etc/wireguard/wgcf.conf" # IPv6
+wg2="sed -i '/\:\:\/0/d' /etc/wireguard/wgcf.conf"       # IPv6
 
 # 设置 WGCF 配置文件的 DNS 服务器
 wg3="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844/g' /etc/wireguard/wgcf.conf"
 wg4="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
 
 # 设置允许外部 IP 访问
-wg5='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv4
-wg6='sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv6
+wg5='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                                                    # IPv4
+wg6='sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                          # IPv6
 wg7='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
 
 # 设置 WARP-GO 配置文件的监听 IP
-wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf' # IPv4
-wgo2='sed -i "s#.*AllowedIPs.*#AllowedIPs = ::/0#g" /opt/warp-go/warp.conf' # IPv6
+wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf'      # IPv4
+wgo2='sed -i "s#.*AllowedIPs.*#AllowedIPs = ::/0#g" /opt/warp-go/warp.conf'           # IPv6
 wgo3='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0,::/0#g" /opt/warp-go/warp.conf' # 双栈
 
 # 设置允许外部 IP 访问
-wgo4='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf' # IPv4
-wgo5='sed -i "s#.*PostUp.*#PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf' # IPv6
+wgo4='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf'                                                                                                                                                                                              # IPv4
+wgo5='sed -i "s#.*PostUp.*#PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf'                                                                                                                                                                    # IPv6
 wgo6='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main; ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g;s#.*PostDown.*#PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main; ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main#g" /opt/warp-go/warp.conf' # 双栈
 
 # 检测 VPS 处理器架构
-archAffix(){
+archAffix() {
     case "$(uname -m)" in
-        x86_64 | amd64 ) echo 'amd64' ;;
-        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
-        s390x ) echo 's390x' ;;
-        * ) red "不支持的CPU架构!" && exit 1 ;;
+    x86_64 | amd64) echo 'amd64' ;;
+    armv8 | arm64 | aarch64) echo 'arm64' ;;
+    s390x) echo 's390x' ;;
+    *) red "不支持的CPU架构!" && exit 1 ;;
     esac
 }
 
 # 检测 VPS 的出站 IP
-check_ip(){
+check_ip() {
     ipv4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*ip\":[ ]*\"\([^"]*\).*')
     ipv6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*ip\":[ ]*\"\([^"]*\).*')
 }
 
 # 检测 VPS 的 IP 形式
-check_stack(){
+check_stack() {
     lan4=$(ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+')
     lan6=$(ip route get 2606:4700:4700::1111 2>/dev/null | grep -oP 'src \K\S+')
     if [[ "$lan4" =~ ^([0-9]{1,3}\.){3} ]]; then
@@ -100,19 +100,19 @@ check_stack(){
 }
 
 # 检测 VPS 的 WARP 状态
-check_warp(){
+check_warp() {
     warp_v4=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
     warp_v6=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
 }
 
 # 检测 WARP+ 账户流量情况
-check_quota(){
+check_quota() {
     if [[ "$CHECK_TYPE" = 1 ]]; then
         # 如为WARP-Cli，使用其自带接口获取流量
         QUOTA=$(warp-cli --accept-tos account 2>/dev/null | grep -oP 'Quota: \K\d+')
     else
         # 判断为 WGCF 或 WARP-GO，从客户端相应的配置文件中提取
-        if [[ -a "/opt/warp-go/warp-go" ]]; then
+        if [[ -e "/opt/warp-go/warp-go" ]]; then
             ACCESS_TOKEN=$(grep 'Token' /opt/warp-go/warp.conf | cut -d= -f2 | sed 's# ##g')
             DEVICE_ID=$(grep 'Device' /opt/warp-go/warp.conf | cut -d= -f2 | sed 's# ##g')
         fi
@@ -123,7 +123,7 @@ check_quota(){
 
         # 使用API，获取流量信息
         API=$(curl -s "https://api.cloudflareclient.com/v0a884/reg/$DEVICE_ID" -H "User-Agent: okhttp/3.12.1" -H "Authorization: Bearer $ACCESS_TOKEN")
-        QUOTA=$(grep -oP '"quota":\K\d+' <<< $API)
+        QUOTA=$(grep -oP '"quota":\K\d+' <<<$API)
     fi
 
     # 流量单位换算
@@ -131,7 +131,7 @@ check_quota(){
 }
 
 # 检查 TUN 模块是否开启
-check_tun(){
+check_tun() {
     TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
     if [[ ! $TUN =~ "in bad state"|"处于错误状态"|"ist in schlechter Verfassung" ]]; then
         if [[ $VIRT == lxc ]]; then
@@ -151,7 +151,7 @@ check_tun(){
 }
 
 # 检查适合 VPS 的最佳 MTU 值
-check_mtu(){
+check_mtu() {
     yellow "正在检测并设置 MTU 最佳值, 请稍等..."
     check_ip
     MTUy=1500
@@ -182,12 +182,12 @@ check_mtu(){
     done
     # 将 MTU 最佳值放置至 MTU 变量中备用
     MTU=$((${MTUy} - 80))
-    
+
     green "MTU 最佳值 = $MTU 已设置完毕！"
 }
 
 # 检查适合 VPS 的最佳 Endpoint IP 地址
-check_endpoint(){
+check_endpoint() {
     yellow "正在检测并设置最佳 Endpoint IP，请稍等，大约需要 1-2 分钟..."
 
     # 下载优选工具软件，感谢某匿名网友的分享的优选工具
@@ -200,38 +200,38 @@ check_endpoint(){
         n=0
         iplist=100
         while true; do
-            temp[$n]=$(echo 162.159.192.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 162.159.192.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo 162.159.193.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 162.159.193.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo 162.159.195.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 162.159.195.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo 188.114.96.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 188.114.96.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo 188.114.97.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 188.114.97.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo 188.114.98.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 188.114.98.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo 188.114.99.$(($RANDOM%256)))
-            n=$[$n+1]
+            temp[$n]=$(echo 188.114.99.$(($RANDOM % 256)))
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
@@ -240,57 +240,57 @@ check_endpoint(){
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 162.159.192.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 162.159.192.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 162.159.193.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 162.159.193.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 162.159.195.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 162.159.195.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 188.114.96.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 188.114.96.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 188.114.97.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 188.114.97.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 188.114.98.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 188.114.98.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo 188.114.99.$(($RANDOM%256)))
-                n=$[$n+1]
+                temp[$n]=$(echo 188.114.99.$(($RANDOM % 256)))
+                n=$(($n + 1))
             fi
         done
     else
         n=0
         iplist=100
         while true; do
-            temp[$n]=$(echo [2606:4700:d0::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
-            n=$[$n+1]
+            temp[$n]=$(echo [2606:4700:d0::$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2)))])
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
-            temp[$n]=$(echo [2606:4700:d1::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
-            n=$[$n+1]
+            temp[$n]=$(echo [2606:4700:d1::$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2)))])
+            n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
             fi
@@ -299,21 +299,21 @@ check_endpoint(){
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo [2606:4700:d0::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
-                n=$[$n+1]
+                temp[$n]=$(echo [2606:4700:d0::$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2)))])
+                n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
                 break
             else
-                temp[$n]=$(echo [2606:4700:d1::$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2))):$(printf '%x\n' $(($RANDOM*2+$RANDOM%2)))])
-                n=$[$n+1]
+                temp[$n]=$(echo [2606:4700:d1::$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2))):$(printf '%x\n' $(($RANDOM * 2 + $RANDOM % 2)))])
+                n=$(($n + 1))
             fi
         done
     fi
 
     # 将生成的 IP 段列表放到 ip.txt 里，待程序优选
-    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u > ip.txt
-    
+    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u >ip.txt
+
     # 取消 Linux 自带的线程限制，以便生成优选 Endpoint IP
     ulimit -n 102400
 
@@ -330,7 +330,7 @@ check_endpoint(){
 }
 
 # 选择 WGCF 安装 / 切换模式
-select_wgcf(){
+select_wgcf() {
     yellow "请选择 WGCF 安装 / 切换的模式"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
@@ -350,7 +350,7 @@ select_wgcf(){
     fi
 }
 
-install_wgcf_ipv4(){
+install_wgcf_ipv4() {
     # 检查 WARP 状态
     check_warp
 
@@ -395,7 +395,7 @@ install_wgcf_ipv4(){
     fi
 }
 
-install_wgcf_ipv6(){
+install_wgcf_ipv6() {
     # 检查 WARP 状态
     check_warp
 
@@ -440,7 +440,7 @@ install_wgcf_ipv6(){
     fi
 }
 
-install_wgcf_dual(){
+install_wgcf_dual() {
     # 检查 WARP 状态
     check_warp
 
@@ -486,20 +486,20 @@ install_wgcf_dual(){
 }
 
 # 下载 WGCF
-init_wgcf(){
+init_wgcf() {
     wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wgcf/wgcf-latest-linux-$(archAffix) -O /usr/local/bin/wgcf
     chmod +x /usr/local/bin/wgcf
 }
 
 # 利用 WGCF 注册 CloudFlare WARP 账户
-register_wgcf(){
+register_wgcf() {
     # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
     if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
         cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
     fi
 
     # 注册 WARP 账户，直到注册成功为止
-    until [[ -a wgcf-account.toml ]]; do
+    until [[ -e wgcf-account.toml ]]; do
         yellow "正在向 CloudFlare WARP 注册账号, 如提示 429 Too Many Requests 错误请耐心等待脚本重试注册即可"
         wgcf register --accept-tos
         sleep 5
@@ -511,17 +511,18 @@ register_wgcf(){
 }
 
 # 配置 WGCF 的 WireGuard 配置文件
-conf_wgcf(){
+conf_wgcf() {
     echo $wgcf1 | sh
     echo $wgcf2 | sh
     echo $wgcf3 | sh
 }
 
 # 检查 WGCF 是否启动成功，如未启动成功则提示
-check_wgcf(){
+check_wgcf() {
     yellow "正在启动 WGCF-WARP"
     i=0
-    while [ $i -le 4 ]; do let i++
+    while [ $i -le 4 ]; do
+        let i++
         wg-quick down wgcf >/dev/null 2>&1
         wg-quick up wgcf >/dev/null 2>&1
         check_warp
@@ -548,7 +549,7 @@ check_wgcf(){
     done
 }
 
-install_wgcf(){
+install_wgcf() {
     # 检测系统要求，如未达到要求则打断安装
     [[ $SYSTEM == "CentOS" ]] && [[ ${OSID} -lt 7 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持CentOS / Almalinux / Rocky / Oracle Linux 7及以上版本的系统" && exit 1
     [[ $SYSTEM == "Debian" ]] && [[ ${OSID} -lt 10 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Debian 10及以上版本的系统" && exit 1
@@ -599,7 +600,7 @@ install_wgcf(){
     if [[ ! -d "/etc/wireguard" ]]; then
         mkdir /etc/wireguard
     fi
-    
+
     # 移动对应的配置文件，避免用户删除
     cp -f wgcf-profile.conf /etc/wireguard/wgcf.conf
     mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
@@ -620,8 +621,7 @@ install_wgcf(){
     check_wgcf
 }
 
-
-switch_wgcf_conf(){
+switch_wgcf_conf() {
     # 关闭 WGCF
     wg-quick down wgcf 2>/dev/null
     systemctl disable wg-quick@wgcf 2>/dev/null
@@ -646,7 +646,7 @@ switch_wgcf_conf(){
 }
 
 # 卸载 WGCF
-uninstall_wgcf(){
+uninstall_wgcf() {
     # 关闭 WGCF
     wg-quick down wgcf 2>/dev/null
     systemctl disable wg-quick@wgcf 2>/dev/null
@@ -677,16 +677,17 @@ uninstall_wgcf(){
 }
 
 # 设置 WARP-GO 配置文件
-conf_wpgo(){
+conf_wpgo() {
     echo $wpgo1 | sh
     echo $wpgo2 | sh
 }
 
 # 检测 WARP-GO 是否正常运行
-check_wpgo(){
+check_wpgo() {
     yellow "正在启动 WARP-GO"
     i=0
-    while [ $i -le 4 ]; do let i++
+    while [ $i -le 4 ]; do
+        let i++
         systemctl stop warp-go
         systemctl disable warp-go >/dev/null 2>&1
         systemctl start warp-go
@@ -716,7 +717,7 @@ check_wpgo(){
 }
 
 # 选择 WARP-GO 安装 / 切换模式
-select_wpgo(){
+select_wpgo() {
     yellow "请选择 WGCF 安装 / 切换的模式"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
@@ -736,7 +737,7 @@ select_wpgo(){
     fi
 }
 
-install_wpgo_ipv4(){
+install_wpgo_ipv4() {
     # 检查 WARP 状态
     check_warp
 
@@ -781,7 +782,7 @@ install_wpgo_ipv4(){
     fi
 }
 
-install_wpgo_ipv6(){
+install_wpgo_ipv6() {
     # 检查 WARP 状态
     check_warp
 
@@ -826,7 +827,7 @@ install_wpgo_ipv6(){
     fi
 }
 
-install_wpgo_dual(){
+install_wpgo_dual() {
     # 检查 WARP 状态
     check_warp
 
@@ -871,7 +872,7 @@ install_wpgo_dual(){
     fi
 }
 
-install_wpgo(){    
+install_wpgo() {
     # 检测 TUN 模块是否开启
     check_tun
 
@@ -894,19 +895,19 @@ install_wpgo(){
         /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
     done
 
-    # 设置 WARP_GO 的配置文件
+    # 设置 WARP-GO 的配置文件
     conf_wpgo
 
-    # 检查最佳 MTU 值，并应用至 WGCF 配置文件
+    # 检查最佳 MTU 值，并应用至 WARP-GO 配置文件
     check_mtu
     sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
 
-    # 优选 EndPoint IP，并应用至 WGCF 配置文件
+    # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
     check_endpoint
     sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
 
     # 设置 WARP-GO 系统服务
-    cat <<EOF > /lib/systemd/system/warp-go.service
+    cat <<EOF >/lib/systemd/system/warp-go.service
 [Unit]
 Description=warp-go service
 After=network.target
@@ -928,7 +929,7 @@ EOF
     check_wpgo
 }
 
-switch_wpgo_conf(){
+switch_wpgo_conf() {
     # 关闭 WARP-GO
     systemctl stop warp-go
     systemctl disable warp-go
@@ -940,7 +941,7 @@ switch_wpgo_conf(){
     check_wpgo
 }
 
-uninstall_wpgo(){
+uninstall_wpgo() {
     # 关闭 WARP-GO
     systemctl stop warp-go
     systemctl disable --now warp-go >/dev/null 2>&1
@@ -957,13 +958,13 @@ uninstall_wpgo(){
     green "WARP-GO 已彻底卸载成功!"
 }
 
-install_warp_cli(){
+install_warp_cli() {
     # 检测系统要求，如未达到要求则打断安装
     [[ $SYSTEM == "CentOS" ]] && [[ ! ${OSID} =~ 8|9 ]] && yellow "当前系统版本：${CMD} \nWARP-Cli代理模式仅支持CentOS / Almalinux / Rocky / Oracle Linux 8 / 9系统" && exit 1
     [[ $SYSTEM == "Debian" ]] && [[ ! ${OSID} =~ 9|10|11 ]] && yellow "当前系统版本：${CMD} \nWARP-Cli代理模式仅支持Debian 9-11系统" && exit 1
     [[ $SYSTEM == "Fedora" ]] && yellow "当前系统版本：${CMD} \nWARP-Cli暂时不支持Fedora系统" && exit 1
     [[ $SYSTEM == "Ubuntu" ]] && [[ ! ${OSID} =~ 16|18|20|22 ]] && yellow "当前系统版本：${CMD} \nWARP-Cli代理模式仅支持Ubuntu 16.04/18.04/20.04/22.04系统" && exit 1
-    
+
     [[ ! $(archAffix) == "amd64" ]] && red "WARP-Cli暂时不支持目前VPS的CPU架构, 请使用CPU架构为amd64的VPS" && exit 1
 
     # 检测 TUN 模块是否开启
@@ -987,7 +988,7 @@ install_warp_cli(){
         ${PACKAGE_INSTALL[int]} sudo curl wget net-tools bc htop iputils screen python3 qrencode
         rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
         ${PACKAGE_INSTALL[int]} cloudflare-warp
-    fi   
+    fi
     if [[ $SYSTEM == "Debian" ]]; then
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop inetutils-ping screen python3 qrencode
@@ -997,7 +998,7 @@ install_warp_cli(){
         echo "deb http://pkg.cloudflareclient.com/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/cloudflare-client.list
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} cloudflare-warp
-    fi    
+    fi
     if [[ $SYSTEM == "Ubuntu" ]]; then
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop inetutils-ping screen python3 qrencode
@@ -1047,7 +1048,7 @@ install_warp_cli(){
     fi
 }
 
-uninstall_warp_cli(){
+uninstall_warp_cli() {
     # 关闭 WARP-Cli
     warp-cli --accept-tos disconnect >/dev/null 2>&1
     warp-cli --accept-tos disable-always-on >/dev/null 2>&1
@@ -1061,7 +1062,7 @@ uninstall_warp_cli(){
     before_showinfo && show_info
 }
 
-install_wireproxy(){
+install_wireproxy() {
     # 安装 WireProxy 依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
@@ -1124,9 +1125,9 @@ install_wireproxy(){
         wg-quick start wgcf >/dev/null 2>&1
         systemctl enable wg-quick@wgcf
     fi
-    
+
     # 应用 WireProxy 配置文件，并将 WGCF 配置文件移至 /etc/wireguard 文件夹，以备安装 WGCF-WARP 使用
-    cat <<EOF > /etc/wireguard/proxy.conf
+    cat <<EOF >/etc/wireguard/proxy.conf
 [Interface]
 Address = 172.16.0.2/32
 MTU = $MTU
@@ -1142,7 +1143,7 @@ EOF
     mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
 
     # 设置 WireProxy 系统服务
-    cat <<'TEXT' > /etc/systemd/system/wireproxy-warp.service
+    cat <<'TEXT' >/etc/systemd/system/wireproxy-warp.service
 [Unit]
 Description=CloudFlare WARP Socks5 proxy mode based for WireProxy, script by Misaka-blog
 After=network.target
@@ -1186,7 +1187,7 @@ TEXT
     before_showinfo && show_info
 }
 
-uninstall_wireproxy(){
+uninstall_wireproxy() {
     # 关闭 WireProxy
     systemctl stop wireproxy-warp
     systemctl disable wireproxy-warp
@@ -1203,7 +1204,7 @@ uninstall_wireproxy(){
     before_showinfo && show_info
 }
 
-change_warp_port(){
+change_warp_port() {
     yellow "请选择需要修改端口的 WARP 客户端"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} WARP-Cli"
@@ -1263,7 +1264,7 @@ change_warp_port(){
                 fi
             done
         fi
-        
+
         # 获取当前 WireProxy 的 socks5 端口
         current_port=$(grep BindAddress /etc/wireguard/proxy.conf)
         sed -i "s/$current_port/BindAddress = 127.0.0.1:$port/g" /etc/wireguard/proxy.conf
@@ -1303,7 +1304,7 @@ change_warp_port(){
     fi
 }
 
-switch_warp(){
+switch_warp() {
     yellow "请选择需要修改端口的 WARP 客户端"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} 启动 Wgcf-WARP"
@@ -1321,63 +1322,63 @@ switch_warp(){
     echo ""
     read -rp "请输入选项 [0-12]: " switch_input
     case $switch_input in
-        1 ) 
-            wg-quick up wgcf >/dev/null 2>&1
-            systemctl enable wg-quick@wgcf >/dev/null 2>&1
-            ;;
-        2 ) 
-            wg-quick down wgcf >/dev/null 2>&1
-            systemctl disable wg-quick@wgcf >/dev/null 2>&1
-            ;;
-        3 ) 
-            wg-quick down wgcf >/dev/null 2>&1
-            systemctl disable wg-quick@wgcf >/dev/null 2>&1
-            wg-quick up wgcf >/dev/null 2>&1
-            systemctl enable wg-quick@wgcf >/dev/null 2>&1
-            ;;
-        4 ) 
-            systemctl start warp-go
-            systemctl enable warp-go >/dev/null 2>&1
-            ;;
-        5 ) 
-            systemctl stop warp-go
-            systemctl disable warp-go >/dev/null 2>&1
-            ;;
-        6 ) 
-            systemctl stop warp-go
-            systemctl disable warp-go >/dev/null 2>&1
-            systemctl start warp-go
-            systemctl enable warp-go >/dev/null 2>&1
-            ;;
-        7 ) 
-            warp-cli --accept-tos connect >/dev/null 2>&1
-            warp-cli --accept-tos enable-always-on >/dev/null 2>&1
-            ;;
-        8 ) warp-cli --accept-tos disconnect >/dev/null 2>&1 ;;
-        9 ) 
-            warp-cli --accept-tos disconnect >/dev/null 2>&1
-            warp-cli --accept-tos connect >/dev/null 2>&1
-            warp-cli --accept-tos enable-always-on >/dev/null 2>&1
-            ;;
-        10 ) 
-            systemctl start wireproxy-warp
-            systemctl enable wireproxy-warp
-            ;;
-        11 ) 
-            systemctl stop wireproxy-warp
-            systemctl disable wireproxy-warp
-            ;;
-        12 ) 
-            systemctl stop wireproxy-warp
-            systemctl disable wireproxy-warp
-            systemctl start wireproxy-warp
-            systemctl enable wireproxy-warp
-            ;;
-        * ) exit 1 ;;
+    1)
+        wg-quick up wgcf >/dev/null 2>&1
+        systemctl enable wg-quick@wgcf >/dev/null 2>&1
+        ;;
+    2)
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
+        ;;
+    3)
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
+        wg-quick up wgcf >/dev/null 2>&1
+        systemctl enable wg-quick@wgcf >/dev/null 2>&1
+        ;;
+    4)
+        systemctl start warp-go
+        systemctl enable warp-go >/dev/null 2>&1
+        ;;
+    5)
+        systemctl stop warp-go
+        systemctl disable warp-go >/dev/null 2>&1
+        ;;
+    6)
+        systemctl stop warp-go
+        systemctl disable warp-go >/dev/null 2>&1
+        systemctl start warp-go
+        systemctl enable warp-go >/dev/null 2>&1
+        ;;
+    7)
+        warp-cli --accept-tos connect >/dev/null 2>&1
+        warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+        ;;
+    8) warp-cli --accept-tos disconnect >/dev/null 2>&1 ;;
+    9)
+        warp-cli --accept-tos disconnect >/dev/null 2>&1
+        warp-cli --accept-tos connect >/dev/null 2>&1
+        warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+        ;;
+    10)
+        systemctl start wireproxy-warp
+        systemctl enable wireproxy-warp
+        ;;
+    11)
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
+        ;;
+    12)
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
+        systemctl start wireproxy-warp
+        systemctl enable wireproxy-warp
+        ;;
+    *) exit 1 ;;
     esac
 }
 
-wireguard_profile(){
+wireguard_profile() {
     yellow "请选择需要从哪个 WARP 客户端生成 WireGuard 配置文件"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} WARP-GO"
@@ -1398,7 +1399,7 @@ wireguard_profile(){
         cat /root/warpgo-proxy.conf
         echo ""
         yellow "节点配置二维码如下所示："
-        qrencode -t ansiutf8 < /root/warpgo-proxy.conf
+        qrencode -t ansiutf8 </root/warpgo-proxy.conf
         echo ""
         yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
     elif [[ $profile_mode == 2 ]]; then
@@ -1411,7 +1412,7 @@ wireguard_profile(){
         cat /root/wgcf-proxy.conf
         echo ""
         yellow "节点配置二维码如下所示："
-        qrencode -t ansiutf8 < /root/wgcf-proxy.conf
+        qrencode -t ansiutf8 </root/wgcf-proxy.conf
         echo ""
         yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
     else
@@ -1420,7 +1421,7 @@ wireguard_profile(){
     fi
 }
 
-warp_traffic(){
+warp_traffic() {
     if [[ -z $(type -P screen) ]]; then
         if [[ ! $SYSTEM == "CentOS" ]]; then
             ${PACKAGE_UPDATE[int]}
@@ -1449,7 +1450,487 @@ warp_traffic(){
     green "创建刷 WARP+ 流量任务成功！ Screen会话名称为：$screenname"
 }
 
-before_showinfo(){
+wgcf_account() {
+    yellow "请选择需要切换的 WARP 账户类型"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WARP 免费账户 ${YELLOW}(默认)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} WARP+"
+    echo -e " ${GREEN}3.${PLAIN} WARP Teams"
+    echo ""
+    read -p "请输入选项 [1-3]: " account_type
+    if [[ $account_type == 2 ]]; then
+        # 关闭 WGCF
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
+
+        # 询问用户获取 WARP 账户许可证密钥，并应用到 WARP 账户配置文件中
+        yellow "获取CloudFlare WARP账号密钥信息方法: "
+        green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+        green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+        echo ""
+        yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+            red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+            read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        done
+        sed -i "s/license_key.*/license_key = \"$warpkey\"/g" wgcf-account.toml
+
+        # 删除原来的 WireGuard 配置文件
+        rm -rf /etc/wireguard/wgcf-profile.conf
+
+        # 询问用户是否使用自定义设备名称，如未使用则使用 WGCF 随机生成的六位设备名
+        read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
+        if [[ -n $device_name ]]; then
+            wgcf update --name $(echo $device_name | sed s/[[:space:]]/_/g) > /etc/wireguard/info.log 2>&1
+        else
+            wgcf update > /etc/wireguard/info.log 2>&1
+        fi
+
+        # 生成新的 WireGuard 配置文件
+        wgcf generate
+
+        # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 文件中对应的内容
+        private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
+        private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+
+        # 启动 WGCF，并检查 WGCF 是否启动成功
+        check_wgcf
+    elif [[ $account_type == 3 ]]; then
+        # 关闭 WGCF
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
+
+        # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
+        yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
+        yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
+        read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
+        if [[ -n $teamconfigurl ]]; then
+            # 将一些字符过滤，以便脚本识别出内容
+            teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
+
+            # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
+            private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
+            private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
+            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
+            sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
+            sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+
+            # 启动 WGCF，并检查 WGCF 是否启动成功
+            check_wgcf
+        else
+            red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+        fi
+    else
+        # 关闭 WGCF
+        wg-quick down wgcf >/dev/null 2>&1
+        systemctl disable wg-quick@wgcf >/dev/null 2>&1
+
+        # 删除原来的账号及 WireGuard 配置文件
+        rm -f /etc/wireguard/wgcf-account.toml /etc/wireguard/wgcf-profile.conf
+
+        # 在 WGCF 处注册账户
+        register_wgcf
+
+        # 移动新的账号及 WireGuard 配置文件
+        mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
+        mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
+
+        # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 文件中对应的内容
+        private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
+        private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+
+        # 启动 WGCF，并检查 WGCF 是否启动成功
+        check_wgcf
+    fi
+}
+
+wpgo_account() {
+    # 检查 VPS 的 IP 形式（如有 WARP 开启则关闭，待检测完再开）
+    check_warp
+    if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
+        systemctl stop warp-go
+        check_stack
+        systemctl start warp-go
+    else
+        check_stack
+    fi
+
+    # 获取并设置目前 WARP-GO 文件的 IP 出站、允许外部 IP 信息，备用
+    current_allowips=$(cat /opt/warp-go/warp.conf | grep AllowedIPs)
+    [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo4
+    [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo5
+    [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo6
+    [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo6
+
+    yellow "请选择需要切换的 WARP 账户类型"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WARP 免费账户 ${YELLOW}(默认)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} WARP+"
+    echo -e " ${GREEN}3.${PLAIN} WARP Teams"
+    echo ""
+    read -p "请输入选项 [1-3]: " account_type
+
+    if [[ $account_type == 2 ]]; then
+        # 关闭 WARP-GO
+        systemctl stop warp-go
+
+        # 询问用户获取 WARP 账户许可证密钥
+        yellow "获取CloudFlare WARP账号密钥信息方法: "
+        green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+        green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+        echo ""
+        yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+            red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+            read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        done
+
+        # 询问用户是否使用自定义设备名称，如未使用则使用 WARP-GO 随机生成的六位设备名
+        read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
+
+        # 删除原来的配置文件，并使用 WARP+ 账户密钥注册
+        rm -f /opt/warp-go/warp.conf
+        result=$(/opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --license=$warpkey --device-name=$devicename)
+
+        # 判断是否升级成功，如果失败则还原 WARP 免费版账户
+        if [[ $result == "Success" ]]; then
+            # 应用 WARP-GO 配置
+            sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
+            echo $current_postip | sh
+
+            # 检查最佳 MTU 值，并应用至 WARP-GO 配置文件
+            check_mtu
+            sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+
+            # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
+            check_endpoint
+            sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            
+            # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
+            check_wpgo
+        else
+            red "WARP+ 账户注册失败！正在还原为 WARP 免费账户"
+
+            # 关闭 WARP-GO
+            systemctl stop warp-go
+
+            # 删除原来的配置文件，并重新注册
+            rm -f /opt/warp-go/warp.conf
+            until [[ -e /opt/warp-go/warp.conf ]]; do
+                yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+            done
+
+            # 应用 WARP-GO 配置
+            sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
+            echo $current_postip | sh
+
+            # 检查最佳 MTU 值，并应用至 WARP-GO 配置文件
+            check_mtu
+            sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+
+            # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
+            check_endpoint
+            sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            
+            # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
+            check_wpgo
+        fi
+    elif [[ $account_type == 3 ]]; then
+        # 关闭 WARP-GO
+        systemctl stop warp-go
+
+        # 询问用户 WARP Teams 账户 TOKEN，并提示获取方式
+        yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
+        read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
+
+        if [[ -n $teams_token ]]; then
+            # 删除原来的配置文件，并使用 Teams TOKEN 注册
+            rm -f /opt/warp-go/warp.conf
+            until [[ -e /opt/warp-go/warp.conf ]]; do
+                yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+            done
+
+            # 应用 WARP-GO 配置
+            sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
+            echo $current_postip | sh
+
+            # 检查最佳 MTU 值，并应用至 WARP-GO 配置文件
+            check_mtu
+            sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+
+            # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
+            check_endpoint
+            sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            
+            # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
+            check_wpgo
+        else
+            red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
+            exit 1
+        fi
+    else
+        # 关闭 WARP-GO
+        systemctl stop warp-go
+
+        # 删除原来的配置文件，并重新注册
+        rm -f /opt/warp-go/warp.conf
+        until [[ -e /opt/warp-go/warp.conf ]]; do
+            yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+            /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+        done
+
+        # 应用 WARP-GO 配置
+        sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
+        echo $current_postip | sh
+
+        # 检查最佳 MTU 值，并应用至 WARP-GO 配置文件
+        check_mtu
+        sed -i "s/MTU.*/MTU = $MTU/g" /opt/warp-go/warp.conf
+
+        # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
+        check_endpoint
+        sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            
+        # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
+        check_wpgo
+    fi
+}
+
+warp_cli_account() {
+    # 关闭 WARP-Cli
+    warp-cli --accept-tos disconnect >/dev/null 2>&1
+    warp-cli --accept-tos register >/dev/null 2>&1
+
+    # 询问用户获取 WARP 账户许可证密钥
+    yellow "获取CloudFlare WARP账号密钥信息方法: "
+    green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+    green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+    echo ""
+    yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+    read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+    until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+        red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+    done
+
+    # 设置 WARP 账户许可证密钥并连接
+    warp-cli --accept-tos set-license "$warpkey" >/dev/null 2>&1 && sleep 1
+    warp-cli --accept-tos connect >/dev/null 2>&1
+
+    # 检查账户是否升级成功，如未升级成功则提示使用免费账户
+    if [[ $(warp-cli --accept-tos account) =~ Limited ]]; then
+        green "WARP-Cli 账户类型切换为 WARP+ 成功！"
+    else
+        red "WARP+ 账户启用失败, 已自动降级至 WARP 免费版账户"
+    fi
+}
+
+wireproxy_account() {
+    yellow "请选择需要切换的 WARP 账户类型"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WARP 免费账户 ${YELLOW}(默认)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} WARP+"
+    echo -e " ${GREEN}3.${PLAIN} WARP Teams"
+    echo ""
+    read -p "请输入选项 [1-3]: " account_type
+    if [[ $account_type == 2 ]]; then
+        # 关闭 WireProxy
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
+
+        # 询问用户获取 WARP 账户许可证密钥，并应用到 WARP 账户配置文件中
+        yellow "获取CloudFlare WARP账号密钥信息方法: "
+        green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
+        green "手机: 下载并安装1.1.1.1 APP → 菜单 → 账户 → 复制密钥到脚本中"
+        echo ""
+        yellow "重要：请确保手机或电脑的1.1.1.1 APP的账户状态为WARP+！"
+        read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        until [[ -z $warpkey || $warpkey =~ ^[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}-[A-Z0-9a-z]{8}$ ]]; do
+            red "WARP 账户许可证密钥格式输入错误，请重新输入！"
+            read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
+        done
+        sed -i "s/license_key.*/license_key = \"$warpkey\"/g" wgcf-account.toml
+
+        # 删除原来的 WireGuard 配置文件
+        rm -rf /etc/wireguard/wgcf-profile.conf
+
+        # 询问用户是否使用自定义设备名称，如未使用则使用 WGCF 随机生成的六位设备名
+        read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
+        if [[ -n $device_name ]]; then
+            wgcf update --name $(echo $device_name | sed s/[[:space:]]/_/g) > /etc/wireguard/info.log 2>&1
+        else
+            wgcf update > /etc/wireguard/info.log 2>&1
+        fi
+
+        # 生成新的 WireGuard 配置文件
+        wgcf generate
+
+        # 获取私钥以及 IPv6 内网地址，用于替换 proxy.conf 文件中对应的内容
+        private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
+
+        # 启动 WireProxy，并检查是否正常运行
+        yellow "正在启动 WireProxy-WARP 代理模式"
+        systemctl start wireproxy-warp
+        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        sleep 2
+        retry_time=0
+        until [[ $wireproxy_status =~ on|plus ]]; do
+            retry_time=$((${retry_time} + 1))
+            red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
+            systemctl stop wireproxy-warp
+            systemctl start wireproxy-warp
+            wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+            if [[ $retry_time == 6 ]]; then
+                echo ""
+                red "安装 WireProxy-WARP 代理模式失败！"
+                green "建议如下："
+                yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+                yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+                yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
+                yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
+                yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+                exit 1
+            fi
+            sleep 8
+        done
+        sleep 5
+        systemctl enable wireproxy-warp >/dev/null 2>&1
+        green "WireProxy-WARP 代理模式已启动成功!"
+        before_showinfo && show_info
+    elif [[ $account_type == 3 ]]; then
+        # 关闭 WireProxy
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
+
+        # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
+        yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
+        yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
+        read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
+        if [[ -n $teamconfigurl ]]; then
+            # 将一些字符过滤，以便脚本识别出内容
+            teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
+
+            # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
+            private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
+            private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
+            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
+            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
+            sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+
+            # 启动 WireProxy，并检查是否正常运行
+            yellow "正在启动 WireProxy-WARP 代理模式"
+            systemctl start wireproxy-warp
+            wireproxy_status=$(curl -sx socks5h://localhost:$wireproxy_port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+            sleep 2
+            retry_time=0
+            until [[ $wireproxy_status =~ on|plus ]]; do
+                retry_time=$((${retry_time} + 1))
+                red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
+                systemctl stop wireproxy-warp
+                systemctl start wireproxy-warp
+                wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+                if [[ $retry_time == 6 ]]; then
+                    echo ""
+                    red "安装 WireProxy-WARP 代理模式失败！"
+                    green "建议如下："
+                    yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+                    yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+                    yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
+                    yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
+                    yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+                    exit 1
+                fi
+                sleep 8
+            done
+            sleep 5
+            systemctl enable wireproxy-warp >/dev/null 2>&1
+            green "WireProxy-WARP 代理模式已启动成功!"
+            before_showinfo && show_info
+        else
+            red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+        fi
+    else
+        # 关闭 WireProxy
+        systemctl stop wireproxy-warp
+        systemctl disable wireproxy-warp
+
+        # 删除原来的账号及 WireGuard 配置文件
+        rm -f /etc/wireguard/wgcf-account.toml /etc/wireguard/wgcf-profile.conf
+
+        # 在 WGCF 处注册账户
+        register_wgcf
+
+        # 移动新的账号及 WireGuard 配置文件
+        mv -f wgcf-profile.conf /etc/wireguard/wgcf-profile.conf
+        mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
+
+        # 获取私钥，用于替换 proxy.conf 文件中对应的内容
+        private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
+
+        # 启动 WireProxy，并检查是否正常运行
+        yellow "正在启动 WireProxy-WARP 代理模式"
+        systemctl start wireproxy-warp
+        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        sleep 2
+        retry_time=0
+        until [[ $wireproxy_status =~ on|plus ]]; do
+            retry_time=$((${retry_time} + 1))
+            red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
+            systemctl stop wireproxy-warp
+            systemctl start wireproxy-warp
+            wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+            if [[ $retry_time == 6 ]]; then
+                echo ""
+                red "安装 WireProxy-WARP 代理模式失败！"
+                green "建议如下："
+                yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+                yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+                yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
+                yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
+                yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+                exit 1
+            fi
+            sleep 8
+        done
+        sleep 5
+        systemctl enable wireproxy-warp >/dev/null 2>&1
+        green "WireProxy-WARP 代理模式已启动成功!"
+        before_showinfo && show_info
+    fi
+}
+
+warp_account() {
+    yellow "请选择需要切换账户的 WARP 客户端"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} WGCF ${YELLOW}(默认)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} WARP-GO"
+    echo -e " ${GREEN}3.${PLAIN} WARP-Cli ${RED}(仅支持升级至 WARP+)${PLAIN}"
+    echo -e " ${GREEN}4.${PLAIN} WireProxy"
+    echo ""
+    read -p "请输入选项 [1-4]: " account_mode
+    if [[ $account_mode == 2 ]]; then
+        wpgo_account
+    elif [[ $account_mode == 3 ]]; then
+        warp_cli_account
+    elif [[ $account_mode == 4 ]]; then
+        wireproxy_account
+    else
+        wgcf_account
+    fi
+}
+
+before_showinfo() {
     yellow "请等待，正在检测 VPS 以及 WARP 状态..."
 
     # 获取出站 IPv4 / IPv6 的地址、提供商
@@ -1561,7 +2042,7 @@ before_showinfo(){
     fi
 }
 
-show_info(){
+show_info() {
     echo "----------------------------------------------------------------------------"
     if [[ -n $ipv4 ]]; then
         echo -e "IPv4 地址：$ipv4  地区：$country4  设备名称：$device4"
@@ -1599,7 +2080,7 @@ show_info(){
     echo "----------------------------------------------------------------------------"
 }
 
-menu(){
+menu() {
     clear
     echo "#############################################################"
     echo -e "#                ${RED}CloudFlare WARP 一键管理脚本${PLAIN}               #"
@@ -1626,25 +2107,24 @@ menu(){
     echo ""
     show_info
     echo ""
-    read -rp "请输入选项 [0-13]: " menu_input
+    read -rp "请输入选项 [0-14]: " menu_input
     case $menu_input in
-        1 ) select_wgcf ;;
-        2 ) uninstall_wgcf ;;
-        3 ) select_wpgo ;;
-        4 ) uninstall_wpgo ;;
-        5 ) install_warp_cli ;;
-        6 ) uninstall_warp_cli ;;
-        7 ) install_wireproxy ;;
-        8 ) uninstall_wireproxy ;;
-        9 ) change_warp_port ;;
-        10 ) switch_warp ;;
-        11 ) wireguard_profile ;;
-        12 ) warp_traffic ;;
-        13 ) warpaccount ;;
-        14 ) wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash warp.sh ;;
-        * ) exit 1 ;;
+        1) select_wgcf ;;
+        2) uninstall_wgcf ;;
+        3) select_wpgo ;;
+        4) uninstall_wpgo ;;
+        5) install_warp_cli ;;
+        6) uninstall_warp_cli ;;
+        7) install_wireproxy ;;
+        8) uninstall_wireproxy ;;
+        9) change_warp_port ;;
+        10) switch_warp ;;
+        11) wireguard_profile ;;
+        12) warp_traffic ;;
+        13) warp_account ;;
+        14) wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash warp.sh ;;
+        *) exit 1 ;;
     esac
 }
 
-before_showinfo
-menu
+before_showinfo && menu
