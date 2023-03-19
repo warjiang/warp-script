@@ -1515,7 +1515,7 @@ wpgo_account() {
         check_stack
     fi
 
-    # 获取目前 WARP-GO 文件的 IP 出站、允许外部 IP 信息，备用
+    # 获取并设置目前 WARP-GO 文件的 IP 出站、允许外部 IP 信息，备用
     current_allowips=$(cat /opt/warp-go/warp.conf | grep AllowedIPs)
     [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo4
     [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo5
