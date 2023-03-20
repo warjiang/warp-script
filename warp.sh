@@ -141,7 +141,7 @@ check_quota() {
 # 检查 TUN 模块是否开启
 check_tun() {
     TUN=$(cat /dev/net/tun 2>&1 | tr '[:upper:]' '[:lower:]')
-    if [[ ! $TUN =~ "in bad state" | "处于错误状态" | "ist in schlechter Verfassung" ]]; then
+    if [[ ! $TUN =~ "in bad state"|"处于错误状态"|"ist in schlechter Verfassung" ]]; then
         if [[ $VIRT == lxc ]]; then
             if [[ $main -lt 5 ]] || [[ $minor -lt 6 ]]; then
                 red "检测到目前的 VPS 未开启 TUN 模块, 请到后台控制面板处开启"
