@@ -367,7 +367,7 @@ install_wgcf_ipv4() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -412,7 +412,7 @@ install_wgcf_ipv6() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -457,7 +457,7 @@ install_wgcf_dual() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -531,8 +531,8 @@ check_wgcf() {
     i=0
     while [ $i -le 4 ]; do
         let i++
-        wg-quick down wgcf >/dev/null 2>&1
-        wg-quick up wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
+        systemctl start wg-quick@wgcf >/dev/null 2>&1
         check_warp
         if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
             green "WGCF-WARP 已启动成功！"
@@ -544,7 +544,7 @@ check_wgcf() {
 
         check_warp
         if [[ ! $warp_v4 =~ on|plus && ! $warp_v6 =~ on|plus ]]; then
-            wg-quick down wgcf >/dev/null 2>&1
+            systemctl stop wg-quick@wgcf >/dev/null 2>&1
             red "安装 WGCF-WARP 失败！"
             green "建议如下："
             yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
@@ -631,7 +631,7 @@ install_wgcf() {
 
 switch_wgcf_conf() {
     # 关闭 WGCF
-    wg-quick down wgcf 2>/dev/null
+    systemctl stop wg-quick@wgcf 2>/dev/null
     systemctl disable wg-quick@wgcf 2>/dev/null
 
     # 删除配置好的 WGCF WireGuard 配置文件，并重新从 wgcf-profile.conf 拉取
@@ -656,7 +656,7 @@ switch_wgcf_conf() {
 # 卸载 WGCF
 uninstall_wgcf() {
     # 关闭 WGCF
-    wg-quick down wgcf 2>/dev/null
+    systemctl stop wg-quick@wgcf 2>/dev/null
     systemctl disable wg-quick@wgcf 2>/dev/null
 
     # 卸载 WireGuard 依赖
@@ -754,7 +754,7 @@ install_wpgo_ipv4() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -799,7 +799,7 @@ install_wpgo_ipv6() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -844,7 +844,7 @@ install_wpgo_dual() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -1115,7 +1115,7 @@ install_wireproxy() {
         systemctl stop warp-go
         systemctl disable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf
     fi
 
@@ -1331,17 +1331,17 @@ switch_warp() {
     read -rp "请输入选项 [0-12]: " switch_input
     case $switch_input in
     1)
-        wg-quick up wgcf >/dev/null 2>&1
+        systemctl start wg-quick@wgcf >/dev/null 2>&1
         systemctl enable wg-quick@wgcf >/dev/null 2>&1
         ;;
     2)
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
         ;;
     3)
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
-        wg-quick up wgcf >/dev/null 2>&1
+        systemctl start wg-quick@wgcf >/dev/null 2>&1
         systemctl enable wg-quick@wgcf >/dev/null 2>&1
         ;;
     4)
@@ -1468,7 +1468,7 @@ wgcf_account() {
     read -p "请输入选项 [1-3]: " account_type
     if [[ $account_type == 2 ]]; then
         # 关闭 WGCF
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
 
         # 询问用户获取 WARP 账户许可证密钥，并应用到 WARP 账户配置文件中
@@ -1508,7 +1508,7 @@ wgcf_account() {
         check_wgcf
     elif [[ $account_type == 3 ]]; then
         # 关闭 WGCF
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
 
         # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
@@ -1534,7 +1534,7 @@ wgcf_account() {
         fi
     else
         # 关闭 WGCF
-        wg-quick down wgcf >/dev/null 2>&1
+        systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
 
         # 删除原来的账号及 WireGuard 配置文件
