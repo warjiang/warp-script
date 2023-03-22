@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.3.0
       - name: Fetch wgcf to latest version
         run: |
           rm -f files/wgcf/wgcf-latest-linux-amd64 files/wgcf/wgcf-latest-linux-arm64 files/wgcf/wgcf-latest-linux-s390x files/wgcf/wgcf-fetchlog.txt

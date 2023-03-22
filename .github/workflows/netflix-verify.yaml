@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v3.3.0
       - name: Fetch Netfilx verify latest version
         run: |
           rm -f files/netflix-verify/nf-linux-amd64 files/netflix-verify/nf-linux-arm64 files/netflix-verify/nf-linux-s390x files/netflix-verify/nfverify-fetchlog.txt
