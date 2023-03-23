@@ -161,6 +161,7 @@ check_tun() {
 # 修改 IPv4 / IPv6 优先级设置
 stack_priority(){
     [[ -e /etc/gai.conf ]] && sed -i '/^precedence \:\:ffff\:0\:0/d;/^label 2002\:\:\/16/d' /etc/gai.conf
+    
     yellow "选择 IPv4 / IPv6 优先级"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} IPv4 优先"
