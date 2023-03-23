@@ -158,9 +158,21 @@ check_tun() {
     fi
 }
 
-# IPv4 / IPv6 优先级设置
+# 修改 IPv4 / IPv6 优先级设置
 stack_priority(){
-    
+    [[ -e /etc/gai.conf ]] && sed -i '/^precedence \:\:ffff\:0\:0/d;/^label 2002\:\:\/16/d' /etc/gai.conf
+    yellow "选择 IPv4 / IPv6 优先级"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} IPv4 优先"
+    echo -e " ${GREEN}2.${PLAIN} IPv6 优先"
+    echo -e " ${GREEN}3.${PLAIN} 默认优先级 ${YELLOW}(默认)${PLAIN}"
+    echo ""
+    read -rp "请选择选项 [1-3]：" priority
+    case $priority in
+        1 ) echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf ;;
+        2 ) echo "label 2002::/16   2" >> /etc/gai.conf ;;
+        * ) yellow "将使用 VPS 默认的 IP 优先级" ;;
+    esac
 }
 
 # 检查适合 VPS 的最佳 MTU 值
@@ -572,6 +584,9 @@ install_wgcf() {
     # 检测 TUN 模块是否开启
     check_tun
 
+    # 设置 IPv4 / IPv6 优先级
+    stack_priority
+
     # 安装 WGCF 必需依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} epel-release
@@ -888,6 +903,9 @@ install_wpgo_dual() {
 install_wpgo() {
     # 检测 TUN 模块是否开启
     check_tun
+
+    # 设置 IPv4 / IPv6 优先级
+    stack_priority
 
     # 安装 WARP-GO 必需依赖
     if [[ $SYSTEM == "CentOS" ]]; then
