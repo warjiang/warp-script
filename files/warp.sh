@@ -158,6 +158,11 @@ check_tun() {
     fi
 }
 
+# IPv4 / IPv6 优先级设置
+stack_priority(){
+    
+}
+
 # 检查适合 VPS 的最佳 MTU 值
 check_mtu() {
     yellow "正在检测并设置 MTU 最佳值, 请稍等..."
@@ -1939,7 +1944,7 @@ warp_account() {
 }
 
 before_showinfo() {
-    yellow "请等待，正在检测 VPS 以及 WARP 状态..."
+    yellow "请等待，正在检测 VPS、WARP 以及解锁状态..."
 
     # 获取出站 IPv4 / IPv6 的地址、提供商
     check_ip
@@ -2049,14 +2054,42 @@ before_showinfo() {
         account_wireproxy="${RED}未启动${PLAIN}"
     fi
 
-    # 测试 ChatGPT 解锁情况，参考：https://github.com/missuo/OpenAI-Checker
-    [[ $(curl -s4m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt4="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
-    [[ $(curl -s6m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt6="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt6="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+    # 检测本地是否安装了 Netflix 检测脚本，如未安装则下载并安装检测脚本，感谢：https://github.com/sjlleo/netflix-verify
+    if [[ ! -f /usr/local/bin/nf ]]; then
+        wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/netflix-verify/nf-linux-$(archAffix) -O /usr/local/bin/nf >/dev/null 2>&1
+        chmod +x /usr/local/bin/nf
+    fi
+
+    # 测试 Netflix 解锁情况
+    netflix4=$(nf | sed -n 3p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+    netflix6=$(nf | sed -n 7p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g") && [[ -n $(echo $netflix6 | grep "NF所识别的IP地域信息") ]] && netflix6=$(nf | sed -n 6p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+    [[ -n $cli_port ]] && netflix_cli=$(nf -proxy socks5://127.0.0.1:$cli_port | sed -n 3p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+    [[ -n $wireproxy_port ]] && netflix_wireproxy=$(nf -proxy socks5://127.0.0.1:$wireproxy_port | sed -n 3p | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]//g")
+
+    # 简化 Netflix 检测脚本输出结果，以便输出结果的排版
+    [[ $netflix4 == "您的出口IP完整解锁Netflix，支持非自制剧的观看" ]] && netflix4="${GREEN}已解锁 Netflix${PLAIN}"
+    [[ $netflix6 == "您的出口IP完整解锁Netflix，支持非自制剧的观看" ]] && netflix6="${GREEN}已解锁 Netflix${PLAIN}"
+    [[ $netflix4 == "您的出口IP可以使用Netflix，但仅可看Netflix自制剧" ]] && netflix4="${YELLOW}Netflix 自制剧${PLAIN}"
+    [[ $netflix6 == "您的出口IP可以使用Netflix，但仅可看Netflix自制剧" ]] && netflix6="${YELLOW}Netflix 自制剧${PLAIN}"
+    [[ -z $netflix4 ]] || [[ $netflix4 == "您的网络可能没有正常配置IPv4，或者没有IPv4网络接入" ]] && netflix4="${RED}无法检测 Netflix 状态${PLAIN}"
+    [[ -z $netflix6 ]] || [[ $netflix6 == "您的网络可能没有正常配置IPv6，或者没有IPv6网络接入" ]] && netflix6="${RED}无法检测 Netflix 状态${PLAIN}"
+    [[ $netflix4 =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]] && netflix4="${RED}无法解锁 Netflix${PLAIN}"
+    [[ $netflix6 =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]] && netflix6="${RED}无法解锁 Netflix${PLAIN}"
+    [[ $netflix_cli == "您的出口IP完整解锁Netflix，支持非自制剧的观看" ]] && netflix_cli="${GREEN}已解锁 Netflix${PLAIN}"
+    [[ $netflix_wireproxy == "您的出口IP完整解锁Netflix，支持非自制剧的观看" ]] && netflix_wireproxy="${GREEN}已解锁 Netflix${PLAIN}"
+    [[ $netflix_cli == "您的出口IP可以使用Netflix，但仅可看Netflix自制剧" ]] && netflix_cli="${YELLOW}Netflix 自制剧${PLAIN}"
+    [[ $netflix_wireproxy == "您的出口IP可以使用Netflix，但仅可看Netflix自制剧" ]] && netflix_wireproxy="${YELLOW}Netflix 自制剧${PLAIN}"
+    [[ $netflix_cli =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]]&& netflix_cli="${RED}无法解锁 Netflix${PLAIN}"
+    [[ $netflix_wireproxy =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]]&& netflix_wireproxy="${RED}无法解锁 Netflix${PLAIN}"
+
+    # 测试 ChatGPT 解锁情况
+    [[ $(curl -s4m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt4="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}支持访问 ChatGPT${PLAIN}"
+    [[ $(curl -s6m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt6="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt6="${GREEN}支持访问 ChatGPT${PLAIN}"
     if [[ -n $cli_port ]]; then
-        [[ $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_cli="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+        [[ $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_cli="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}支持访问 ChatGPT${PLAIN}"
     fi
     if [[ -n $wireproxy_port ]]; then
-        [[ $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_wireproxy="${RED}当前 IP 无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}当前 IP 支持访问 ChatGPT${PLAIN}"
+        [[ $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_wireproxy="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}支持访问 ChatGPT${PLAIN}"
     fi
 }
 
@@ -2065,7 +2098,7 @@ show_info() {
     if [[ -n $ipv4 ]]; then
         echo -e "IPv4 地址：$ipv4  地区：$country4  设备名称：$device4"
         echo -e "提供商：$provider4  WARP 账户状态：$account4  剩余流量：$quota4"
-        echo -e "ChatGPT 状态：$chatgpt4"
+        echo -e "Netflix 状态：$netflix4  ChatGPT 状态：$chatgpt4"
     else
         echo -e "IPv4 出站状态：${RED}未启用${PLAIN}"
     fi
@@ -2073,7 +2106,7 @@ show_info() {
     if [[ -n $ipv6 ]]; then
         echo -e "IPv6 地址：$ipv6  地区：$country6  设备名称：$device6"
         echo -e "提供商：$provider6  WARP 账户状态：$account6  剩余流量：$quota6"
-        echo -e "ChatGPT 状态：$chatgpt6"
+        echo -e "Netflix 状态：$netflix6  ChatGPT 状态：$chatgpt6"
     else
         echo -e "IPv6 出站状态：${RED}未启用${PLAIN}"
     fi
@@ -2082,7 +2115,7 @@ show_info() {
         echo -e "WARP-Cli代理端口: 127.0.0.1:$cli_port  状态: $account_cli  剩余流量：$quota_cli"
         if [[ -n $ip_cli ]]; then
             echo -e "IP: $ip_cli  地区: $country_cli  提供商：$provider_cli"
-            echo -e "ChatGPT 状态：$chatgpt_cli"
+            echo -e "Netflix 状态：$netflix_cli  ChatGPT 状态：$chatgpt_cli"
         fi
     else
         echo -e "WARP-Cli 出站状态：${RED}未安装${PLAIN}"
@@ -2092,7 +2125,7 @@ show_info() {
         echo -e "WireProxy-WARP代理端口: 127.0.0.1:$wireproxy_port  状态: $account_wireproxy  剩余流量：$quota_wireproxy"
         if [[ -n $ip_wireproxy ]]; then
             echo -e "IP: $ip_wireproxy  地区: $country_wireproxy  提供商：$provider_wireproxy"
-            echo -e "ChatGPT 状态：$chatgpt_wireproxy"
+            echo -e "Netflix 状态：$netflix_wireproxy  ChatGPT 状态：$chatgpt_wireproxy"
         fi
     else
         echo -e "WireProxy 出站状态：${RED}未安装${PLAIN}"
