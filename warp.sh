@@ -349,6 +349,20 @@ check_endpoint() {
     # 将 result.csv 文件的优选 Endpoint IP 提取出来，放置到 best_endpoint 变量中备用
     best_endpoint=$(cat result.csv | sed -n 2p | awk -F ',' '{print $1}')
 
+    # 查询优选出来的 Endpoint IP 的 loss 是否为 100.00%，如是，则替换为默认的 Endpoint IP
+    endpoint_loss=$(cat result.csv | sed -n 2p | awk -F ',' '{print $2}')
+    if [[ $endpoint_loss == "100.00%" ]]; then
+        # 检查 VPS 的出站 IP 情况
+        check_ip
+
+        # 如未有 IPv4 则使用 IPv6 的 Endpoint IP，如有 IPv4 则使用 IPv4 Endpoint IP
+        if [[ -z $ipv4 ]]; then
+            best_endpoint="[2606:4700:d0::a29f:c001]:2408"
+        else
+            best_endpoint="162.159.193.10:2408"
+        fi
+    fi
+
     # 删除 WARP Endpoint IP 优选工具及其附属文件
     rm -f warp ip.txt result.csv
 
