@@ -10,6 +10,16 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash wa
 
 ### WARP Endpoint IP 优选脚本
 
+#### For Windows
+
+下载地址：https://gitlab.com/Misaka-blog/warp-script/-/blob/main/files/warp-yxip/warp-yxip-win.7z
+
+#### For MacOS
+
+开发中...
+
+#### For Linux （包括安卓 Termux 和 iOS 的 iSH）
+
 ```shell
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
 ```
