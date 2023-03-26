@@ -8,6 +8,12 @@ CloudFlare WARP 一键管理脚本
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash warp.sh
 ```
 
+### WARP Endpoint IP 优选脚本
+
+```shell
+wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
+```
+
 ## 常见问题
 
 ### 1. 如果我想使用全局 IPv4 / IPv6、或我想将 VPS 的出站交给 WARP 进行代理，我该是安装 WGCF 或 WARP-GO？
