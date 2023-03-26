@@ -71,7 +71,7 @@ endpointyx(){
     # 显示优选 Endpoint IP 及使用方法
     green "当前最优 Endpoint IP 为：$best_endpoint"
     yellow "使用方法如下："
-    yellow "1. 将默认的 Endpoint IP：engage.cloudflareclient.com:2408 替换成本地网络最优的 Endpoint IP：$best_endpoint"
+    yellow "1. 将 WireGuard 节点的默认的 Endpoint IP：engage.cloudflareclient.com:2408 替换成本地网络最优的 Endpoint IP：$best_endpoint"
 
     # 删除 WARP Endpoint IP 优选工具及其附属文件
     rm -f warp ip.txt result.csv
