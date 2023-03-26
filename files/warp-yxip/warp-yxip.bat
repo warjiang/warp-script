@@ -10,13 +10,16 @@ if not exist "ips-v6.txt" echo 缺少IPV6数据 ips-v6.txt&pause&exit
 goto main
 
 :main
-title CF WARP 优选
+title WARP Endpoint IP 一键优选脚本
 set /a menu=1
-echo 1. WARP-V4优选&echo 2. WARP-V6优选&echo 0. 退出&echo.
+echo 1. WARP IPv4 Endpoint IP 优选
+echo 2. WARP IPv6 Endpoint IP 优选
+echo 0. 退出
+echo.
 set /p menu=请选择菜单(默认%menu%):
 if %menu%==0 exit
-if %menu%==1 title WARP-V4优选&set filename=ips-v4.txt&goto getv4
-if %menu%==2 title WARP-V6优选&set filename=ips-v6.txt&goto getv6
+if %menu%==1 title WARP IPv4 Endpoint IP 优选优选&set filename=ips-v4.txt&goto getv4
+if %menu%==2 title WARP IPv6 Endpoint IP 优选&set filename=ips-v6.txt&goto getv6
 cls
 goto main
 
