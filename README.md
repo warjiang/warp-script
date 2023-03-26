@@ -16,7 +16,9 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash wa
 
 #### For MacOS
 
-开发中...
+```shell
+wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip-mac.sh && bash warp-yxip-mac.sh
+```
 
 #### For Linux （包括安卓 Termux 和 iOS 的 iSH）
 
