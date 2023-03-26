@@ -4,22 +4,22 @@ cls
 goto start
 
 :start
-if not exist "warp.exe" echo ȱ��warp.exe����&pause&exit
-if not exist "ips-v4.txt" echo ȱ��IPV4���� ips-v4.txt&pause&exit
-if not exist "ips-v6.txt" echo ȱ��IPV6���� ips-v6.txt&pause&exit
+if not exist "warp.exe" echo 缺少warp.exe程序&pause&exit
+if not exist "ips-v4.txt" echo 缺少IPV4数据 ips-v4.txt&pause&exit
+if not exist "ips-v6.txt" echo 缺少IPV6数据 ips-v6.txt&pause&exit
 goto main
 
 :main
-title WARP Endpoint IP һ����ѡ�ű�
+title WARP Endpoint IP 一键优选脚本
 set /a menu=1
-echo "1. WARP IPv4 Endpoint IP ��ѡ"
-echo "2. WARP IPv6 Endpoint IP ��ѡ"
-echo "0. �˳�"
+echo "1. WARP IPv4 Endpoint IP 优选"
+echo "2. WARP IPv6 Endpoint IP 优选"
+echo "0. 退出"
 echo.
-set /p menu=��ѡ��˵�(Ĭ��%menu%):
+set /p menu=请选择菜单(默认%menu%):
 if %menu%==0 exit
-if %menu%==1 title WARP IPv4 Endpoint IP ��ѡ&set filename=ips-v4.txt&goto getv4
-if %menu%==2 title WARP IPv6 Endpoint IP ��ѡ&set filename=ips-v6.txt&goto getv6
+if %menu%==1 title WARP IPv4 Endpoint IP 优选&set filename=ips-v4.txt&goto getv4
+if %menu%==2 title WARP IPv6 Endpoint IP 优选&set filename=ips-v6.txt&goto getv6
 cls
 goto main
 
@@ -96,8 +96,9 @@ echo %%i>>ip.txt
 for /f "tokens=1 delims==" %%i in ('set ^| findstr =anycastip') do (
 set %%i=
 )
+
 warp
 del ip.txt > nul 2>&1
-echo �밴������رմ��ڼ���
-pause>nul
+echo 请按任意键关闭窗口
+pause > nul
 exit
