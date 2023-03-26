@@ -4,22 +4,22 @@ cls
 goto start
 
 :start
-if not exist "warp.exe" echo È±ï¿½ï¿½warp.exeï¿½ï¿½ï¿½ï¿½&pause&exit
-if not exist "ips-v4.txt" echo È±ï¿½ï¿½IPV4ï¿½ï¿½ï¿½ï¿½ ips-v4.txt&pause&exit
-if not exist "ips-v6.txt" echo È±ï¿½ï¿½IPV6ï¿½ï¿½ï¿½ï¿½ ips-v6.txt&pause&exit
+if not exist "warp.exe" echo È±ÉÙ warp.exe ³ÌÐò & pause & exit
+if not exist "ips-v4.txt" echo È±ÉÙ IPV4 Êý¾Ý ips-v4.txt & pause & exit
+if not exist "ips-v6.txt" echo È±ÉÙ IPV6 Êý¾Ý ips-v6.txt & pause & exit
 goto main
 
 :main
-title WARP Endpoint IP Ò»ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Å±ï¿½
+title WARP Endpoint IP Ò»¼üÓÅÑ¡½Å±¾
 set /a menu=1
-echo "1. WARP IPv4 Endpoint IP ï¿½ï¿½Ñ¡"
-echo "2. WARP IPv6 Endpoint IP ï¿½ï¿½Ñ¡"
-echo "0. ï¿½Ë³ï¿½"
+echo 1. WARP IPv4 Endpoint IP ÓÅÑ¡
+echo 2. WARP IPv6 Endpoint IP ÓÅÑ¡
+echo 0. ÍË³ö
 echo.
-set /p menu=ï¿½ï¿½Ñ¡ï¿½ï¿½Ëµï¿½(Ä¬ï¿½ï¿½%menu%):
+set /p menu=ÇëÊäÈëÑ¡Ïî (Ä¬ÈÏ%menu%):
 if %menu%==0 exit
-if %menu%==1 title WARP IPv4 Endpoint IP ï¿½ï¿½Ñ¡&set filename=ips-v4.txt&goto getv4
-if %menu%==2 title WARP IPv6 Endpoint IP ï¿½ï¿½Ñ¡&set filename=ips-v6.txt&goto getv6
+if %menu%==1 title WARP IPv4 Endpoint IP ÓÅÑ¡ & set filename=ips-v4.txt & goto getv4
+if %menu%==2 title WARP IPv6 Endpoint IP ÓÅÑ¡ & set filename=ips-v6.txt & goto getv6
 cls
 goto main
 
@@ -96,8 +96,9 @@ echo %%i>>ip.txt
 for /f "tokens=1 delims==" %%i in ('set ^| findstr =anycastip') do (
 set %%i=
 )
+
 warp
 del ip.txt > nul 2>&1
-echo ï¿½ë°´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø±Õ´ï¿½ï¿½Ú¼ï¿½ï¿½ï¿½
-pause>nul
+echo Çë°´ÈÎÒâ¼ü¹Ø±Õ´°¿Ú
+pause > nul
 exit

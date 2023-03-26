@@ -4,22 +4,22 @@ cls
 goto start
 
 :start
-if not exist "warp.exe" echo 缺少warp.exe程序&pause&exit
-if not exist "ips-v4.txt" echo 缺少IPV4数据 ips-v4.txt&pause&exit
-if not exist "ips-v6.txt" echo 缺少IPV6数据 ips-v6.txt&pause&exit
+if not exist "warp.exe" echo 缺少 warp.exe 程序 & pause & exit
+if not exist "ips-v4.txt" echo 缺少 IPV4 数据 ips-v4.txt & pause & exit
+if not exist "ips-v6.txt" echo 缺少 IPV6 数据 ips-v6.txt & pause & exit
 goto main
 
 :main
 title WARP Endpoint IP 一键优选脚本
 set /a menu=1
-echo "1. WARP IPv4 Endpoint IP 优选"
-echo "2. WARP IPv6 Endpoint IP 优选"
-echo "0. 退出"
+echo 1. WARP IPv4 Endpoint IP 优选
+echo 2. WARP IPv6 Endpoint IP 优选
+echo 0. 退出
 echo.
-set /p menu=请选择菜单(默认%menu%):
+set /p menu=请输入选项 (默认%menu%):
 if %menu%==0 exit
-if %menu%==1 title WARP IPv4 Endpoint IP 优选&set filename=ips-v4.txt&goto getv4
-if %menu%==2 title WARP IPv6 Endpoint IP 优选&set filename=ips-v6.txt&goto getv6
+if %menu%==1 title WARP IPv4 Endpoint IP 优选 & set filename=ips-v4.txt & goto getv4
+if %menu%==2 title WARP IPv6 Endpoint IP 优选 & set filename=ips-v6.txt & goto getv6
 cls
 goto main
 
