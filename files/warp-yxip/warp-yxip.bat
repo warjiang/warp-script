@@ -12,8 +12,20 @@ goto main
 :main
 title WARP Endpoint IP 一键优选脚本
 set /a menu=1
+echo #############################################################
+echo #                WARP Endpoint IP 一键优选脚本              #
+echo # 作者: MisakaNo の 小破站                                  #
+echo # 博客: https://blog.misaka.rest                            #
+echo # GitHub 项目: https://github.com/Misaka-blog               #
+echo # GitLab 项目: https://gitlab.com/Misaka-blog               #
+echo # Telegram 频道: https://t.me/misaka_noc                    #
+echo # Telegram 群组: https://t.me/misaka_noc_chat               #
+echo # YouTube 频道: https://www.youtube.com/@misaka-blog        #
+echo #############################################################
+echo.
 echo 1. WARP IPv4 Endpoint IP 优选
 echo 2. WARP IPv6 Endpoint IP 优选
+echo -------------
 echo 0. 退出
 echo.
 set /p menu=请输入选项 (默认%menu%):
