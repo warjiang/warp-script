@@ -27,8 +27,6 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
     fi
 done
 
-[[ -z $SYSTEM ]] && red "不支持当前VPS系统, 请使用主流的操作系统" && exit 1
-
 archAffix(){
     case "$(uname -m)" in
         x86_64 | amd64 ) echo 'amd64' ;;
@@ -212,4 +210,5 @@ menu(){
         0 ) exit 1 ;;
     esac
 }
+
 menu
