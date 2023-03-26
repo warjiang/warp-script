@@ -17,12 +17,11 @@ yellow() {
     echo -e "\033[33m\033[01m$1\033[0m"
 }
 
-REGEX=("debian" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora")
-RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora")
-PACKAGE_UPDATE=("apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update")
-PACKAGE_INSTALL=("apt -y install" "apt -y install" "yum -y install" "yum -y install" "yum -y install")
-PACKAGE_REMOVE=("apt -y remove" "apt -y remove" "yum -y remove" "yum -y remove" "yum -y remove")
-PACKAGE_UNINSTALL=("apt -y autoremove" "apt -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove")
+REGEX=("debian" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora" "alpine")
+RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora" "Alpine")
+PACKAGE_UPDATE=("apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update" "apk update -f")
+PACKAGE_INSTALL=("apt -y install" "apt -y install" "yum -y install" "yum -y install" "yum -y install" "apk add -f")
+PACKAGE_UNINSTALL=("apt -y autoremove" "apt -y autoremove" "yum -y autoremove" "yum -y autoremove" "yum -y autoremove" "apk del -f")
 
 [[ $EUID -ne 0 ]] && red "注意：请在root用户下运行脚本" && exit 1
 
@@ -338,7 +337,7 @@ check_endpoint() {
     fi
 
     # 将生成的 IP 段列表放到 ip.txt 里，待程序优选
-    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u >ip.txt
+    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u > ip.txt
 
     # 取消 Linux 自带的线程限制，以便生成优选 Endpoint IP
     ulimit -n 102400
