@@ -46,7 +46,9 @@ endpointyx(){
     best_endpoint=$(cat result.csv | sed -n 2p | awk -F ',' '{print $1}')
     
     # 显示优选 Endpoint IP 及使用方法
-    green "当前最优 Endpoint IP 为：$best_endpoint"
+    green "当前最优 Endpoint IP 结果如下："
+    cat result.csv | awk -F, '$3!="timeout ms" {print} ' | sort -t, -nk2 -nk3 | uniq | head -11 | awk -F, '{print "端点 "$1" 丢包率 "$2" 平均延迟 "$3}'
+    echo ""
     yellow "使用方法如下："
     yellow "1. 将 WireGuard 节点的默认的 Endpoint IP：engage.cloudflareclient.com:2408 替换成本地网络最优的 Endpoint IP：$best_endpoint"
 
