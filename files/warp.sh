@@ -1462,7 +1462,7 @@ wireguard_profile() {
         # 用户回显、以及生成二维码
         green "WARP-GO 的 WireGuard 配置文件已提取成功！"
         yellow "文件内容如下，并已保存至：/root/warpgo-proxy.conf"
-        cat /root/warpgo-proxy.conf
+        red "$(cat /root/warpgo-proxy.conf)"
         echo ""
         yellow "节点配置二维码如下所示："
         qrencode -t ansiutf8 </root/warpgo-proxy.conf
@@ -1470,7 +1470,7 @@ wireguard_profile() {
         echo ""
         green "WARP-GO 的 Sing-box 配置文件已提取成功！"
         yellow "文件内容如下，并已保存至：/root/warpgo-sing-box.json"
-        cat /root/warpgo-sing-box.json
+        red "$(cat /root/warpgo-sing-box.json)"
         yellow "Reserved 值 = $(grep -o '"reserved":\[[^]]*\]' /root/warpgo-sing-box.json)"
         echo ""
         yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
@@ -1481,7 +1481,7 @@ wireguard_profile() {
         # 用户回显、以及生成二维码
         green "Wgcf-WARP 的 WireGuard 配置文件已提取成功！"
         yellow "文件内容如下，并已保存至：/root/wgcf-proxy.conf"
-        cat /root/wgcf-proxy.conf
+        red "$(cat /root/wgcf-proxy.conf)"
         echo ""
         yellow "节点配置二维码如下所示："
         qrencode -t ansiutf8 </root/wgcf-proxy.conf
