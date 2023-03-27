@@ -1471,7 +1471,7 @@ wireguard_profile() {
         green "WARP-GO 的 Sing-box 配置文件已提取成功！"
         yellow "文件内容如下，并已保存至：/root/warpgo-sing-box.json"
         red "$(cat /root/warpgo-sing-box.json)"
-        yellow "Reserved 值 = $(grep -o '"reserved":\[[^]]*\]' /root/warpgo-sing-box.json)"
+        yellow "Reserved 值：$(grep -o '"reserved":\[[^]]*\]' /root/warpgo-sing-box.json)"
         echo ""
         yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
     elif [[ $profile_mode == 2 ]]; then
