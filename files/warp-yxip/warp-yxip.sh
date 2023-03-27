@@ -65,15 +65,12 @@ endpointyx(){
     # 启动 WARP Endpoint IP 优选工具
     chmod +x warp && ./warp >/dev/null 2>&1
     
-    # 将 result.csv 文件的优选 Endpoint IP 提取出来，放置到 best_endpoint 变量中备用
-    best_endpoint=$(cat result.csv | sed -n 2p | awk -F ',' '{print $1}')
-    
-    # 显示优选 Endpoint IP 及使用方法
+    # 显示前十个优选 Endpoint IP 及使用方法
     green "当前最优 Endpoint IP 结果如下："
     cat result.csv | awk -F, '$3!="timeout ms" {print} ' | sort -t, -nk2 -nk3 | uniq | head -11 | awk -F, '{print "端点 "$1" 丢包率 "$2" 平均延迟 "$3}'
     echo ""
     yellow "使用方法如下："
-    yellow "1. 将 WireGuard 节点的默认的 Endpoint IP：engage.cloudflareclient.com:2408 替换成本地网络最优的 Endpoint IP：$best_endpoint"
+    yellow "1. 将 WireGuard 节点的默认的 Endpoint IP：engage.cloudflareclient.com:2408 替换成本地网络最优的 Endpoint IP"
 
     # 删除 WARP Endpoint IP 优选工具及其附属文件
     rm -f warp ip.txt result.csv
