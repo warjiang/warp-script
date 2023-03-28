@@ -372,9 +372,9 @@ check_endpoint() {
 select_wgcf() {
     yellow "请选择 WGCF 安装 / 切换的模式"
     echo ""
-    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
-    echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 Wgcf-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
-    echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 Wgcf-WARP 双栈模式"
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 WGCF-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 WGCF-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 WGCF-WARP 双栈模式"
     echo ""
     read -p "请输入选项 [1-3]: " wgcf_mode
     if [ "$wgcf_mode" = "1" ]; then
@@ -567,6 +567,7 @@ check_wgcf() {
         check_warp
         if [[ $warp_v4 =~ on|plus ]] || [[ $warp_v6 =~ on|plus ]]; then
             green "WGCF-WARP 已启动成功！"
+            systemctl enable wg-quick@wgcf >/dev/null 2>&1
             echo ""
             red "下面是恰饭广告："
             yellow "灵梦机场"
@@ -579,7 +580,6 @@ check_wgcf() {
         else
             red "WGCF-WARP 启动失败！"
         fi
-
         check_warp
         if [[ ! $warp_v4 =~ on|plus && ! $warp_v6 =~ on|plus ]]; then
             systemctl stop wg-quick@wgcf >/dev/null 2>&1
@@ -597,10 +597,10 @@ check_wgcf() {
 
 install_wgcf() {
     # 检测系统要求，如未达到要求则打断安装
-    [[ $SYSTEM == "CentOS" ]] && [[ ${OSID} -lt 7 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持CentOS / Almalinux / Rocky / Oracle Linux 7及以上版本的系统" && exit 1
-    [[ $SYSTEM == "Debian" ]] && [[ ${OSID} -lt 10 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Debian 10及以上版本的系统" && exit 1
-    [[ $SYSTEM == "Fedora" ]] && [[ ${OSID} -lt 29 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Fedora 29及以上版本的系统" && exit 1
-    [[ $SYSTEM == "Ubuntu" ]] && [[ ${OSID} -lt 18 ]] && yellow "当前系统版本：${CMD} \nWgcf-WARP模式仅支持Ubuntu 16.04及以上版本的系统" && exit 1
+    [[ $SYSTEM == "CentOS" ]] && [[ ${OSID} -lt 7 ]] && yellow "当前系统版本：${CMD} \nWGCF-WARP模式仅支持CentOS / Almalinux / Rocky / Oracle Linux 7及以上版本的系统" && exit 1
+    [[ $SYSTEM == "Debian" ]] && [[ ${OSID} -lt 10 ]] && yellow "当前系统版本：${CMD} \nWGCF-WARP模式仅支持Debian 10及以上版本的系统" && exit 1
+    [[ $SYSTEM == "Fedora" ]] && [[ ${OSID} -lt 29 ]] && yellow "当前系统版本：${CMD} \nWGCF-WARP模式仅支持Fedora 29及以上版本的系统" && exit 1
+    [[ $SYSTEM == "Ubuntu" ]] && [[ ${OSID} -lt 18 ]] && yellow "当前系统版本：${CMD} \nWGCF-WARP模式仅支持Ubuntu 16.04及以上版本的系统" && exit 1
 
     # 检测 TUN 模块是否开启
     check_tun
@@ -728,7 +728,7 @@ uninstall_wgcf() {
         sed -i '/^precedence[ ]*::ffff:0:0\/96[ ]*100/d' /etc/gai.conf
     fi
 
-    green "Wgcf-WARP 已彻底卸载成功!"
+    green "WGCF-WARP 已彻底卸载成功!"
     before_showinfo && show_info
 }
 
@@ -1394,9 +1394,9 @@ change_warp_port() {
 switch_warp() {
     yellow "请选择需要修改端口的 WARP 客户端"
     echo ""
-    echo -e " ${GREEN}1.${PLAIN} 启动 Wgcf-WARP"
-    echo -e " ${GREEN}2.${PLAIN} 关闭 Wgcf-WARP"
-    echo -e " ${GREEN}3.${PLAIN} 重启 Wgcf-WARP"
+    echo -e " ${GREEN}1.${PLAIN} 启动 WGCF-WARP"
+    echo -e " ${GREEN}2.${PLAIN} 关闭 WGCF-WARP"
+    echo -e " ${GREEN}3.${PLAIN} 重启 WGCF-WARP"
     echo -e " ${GREEN}4.${PLAIN} 启动 WARP-GO"
     echo -e " ${GREEN}5.${PLAIN} 关闭 WARP-GO"
     echo -e " ${GREEN}6.${PLAIN} 重启 WARP-GO"
@@ -1507,7 +1507,7 @@ wireguard_profile() {
         cp -f /etc/wireguard/wgcf-profile.conf /root/wgcf-proxy.conf
 
         # 用户回显、以及生成二维码
-        green "Wgcf-WARP 的 WireGuard 配置文件已提取成功！"
+        green "WGCF-WARP 的 WireGuard 配置文件已提取成功！"
         yellow "文件内容如下，并已保存至：/root/wgcf-proxy.conf"
         red "$(cat /root/wgcf-proxy.conf)"
         echo ""
