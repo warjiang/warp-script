@@ -68,7 +68,7 @@ fi
 clear
 green "WGCF 的 WireGuard 配置文件已生成成功！"
 yellow "下面是配置文件内容："
-cat wgcf-profile.conf
+red "$(cat wgcf-profile.conf)"
 echo ""
 yellow "下面是配置文件分享二维码："
 qrencode -t ansiutf8 < wgcf-profile.conf

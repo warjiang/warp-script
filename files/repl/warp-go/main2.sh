@@ -60,7 +60,7 @@ fi
 clear
 green "WARP-GO 的 WireGuard 配置文件已生成成功！"
 yellow "下面是配置文件内容："
-cat proxy.conf
+red "$(cat proxy.conf)"
 echo ""
 yellow "下面是配置文件分享二维码："
 qrencode -t ansiutf8 < proxy.conf
