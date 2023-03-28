@@ -47,6 +47,9 @@ elif [[ $account_type == 3 ]]; then
   read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
   if [[ -n $teams_token ]]; then
     /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --team-config $teams_token
+  else
+    red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
+    exit 1
   fi
 else
   ./warp-go --register --config=warp.conf

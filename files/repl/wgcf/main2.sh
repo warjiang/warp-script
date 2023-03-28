@@ -47,10 +47,20 @@ if [[ $account_type == 2 ]]; then
   ./wgcf generate
 elif [[ $account_type == 3 ]]; then
   ./wgcf generate
-  clear
+  chmod +x wgcf-profile.conf
   yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
   yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
   read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
+  if [[ -n $teamconfigurl ]]; then
+    teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
+    private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
+    private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
+    sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" wgcf-profile.conf;
+    sed -i "s#Address.*128#Address = $private_v6#g" wgcf-profile.conf;
+  else
+    red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+    exit 1
+  fi
 else
   ./wgcf generate
 fi
