@@ -8,26 +8,6 @@ CloudFlare WARP 一键管理脚本
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/warp.sh && bash warp.sh
 ```
 
-### WARP Endpoint IP 优选脚本
-
-#### For Windows
-
-下载地址：https://gitlab.com/Misaka-blog/warp-script/-/blob/main/files/warp-yxip/warp-yxip-win.7z
-
-#### For MacOS
-
-```shell
-wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip-mac.sh && bash warp-yxip-mac.sh
-```
-
-#### For Linux （包括安卓 Termux 和 iOS 的 iSH）
-
-```shell
-wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
-```
-
-苹果 iSH 初始命令：`apk add -f openssh bash wget`
-
 ## 常见问题
 
 ### 1. 如果我想使用全局 IPv4 / IPv6、或我想将 VPS 的出站交给 WARP 进行代理，我该是安装 WGCF 或 WARP-GO？
@@ -76,6 +56,26 @@ curl -4 ip.p3terx.com
 ### 6. 为啥 CloudFlare 有了 WARP-Cli，使用这些第三方客户端的 WARP 脚本还有什么用？
 
 由于 WARP-Cli 的开发进度缓慢，如仅支持 AMD64 的 CPU 架构、不支持 IPv6 Only 的 VPS，所以说脚本使用了多种第三方客户端，尽力满足大多数用户的相关需求
+
+### WARP Endpoint IP 优选脚本
+
+#### For Windows
+
+下载地址：https://gitlab.com/Misaka-blog/warp-script/-/blob/main/files/warp-yxip/warp-yxip-win.7z
+
+#### For MacOS
+
+```shell
+wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip-mac.sh && bash warp-yxip-mac.sh
+```
+
+#### For Linux （包括安卓 Termux 和 iOS 的 iSH）
+
+```shell
+wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
+```
+
+苹果 iSH 初始命令：`apk add -f openssh bash wget`
 
 ## 鸣谢项目
 
