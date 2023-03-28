@@ -37,7 +37,9 @@ if [[ $account_type == 2 ]]; then
     read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
   done
 elif [[ $account_type == 3 ]]; then
-  echo "ok"
+  yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
+  yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
+  read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
 else
   echo "ok"
 fi
