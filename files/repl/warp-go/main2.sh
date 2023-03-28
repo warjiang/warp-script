@@ -28,3 +28,10 @@ echo -e " ${GREEN}2.${PLAIN} WARP+"
 echo -e " ${GREEN}3.${PLAIN} WARP Teams"
 echo ""
 read -p "请输入选项 [1-3]: " account_type
+if [[ $account_type == 2 ]]; then
+
+elif [[ $account_type == 3 ]]; then
+
+else
+
+fi
