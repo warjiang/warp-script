@@ -17,7 +17,7 @@ yellow(){
     echo -e "\033[33m\033[01m$1\033[0m"
 }
 
-rm -f warp.conf proxy.conf
+rm -f warp.conf proxy.json
 
 chmod +x ./warp-go
 clear
