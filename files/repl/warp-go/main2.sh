@@ -43,7 +43,11 @@ if [[ $account_type == 2 ]]; then
   read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " devicename
   ./warp-go --register --config=./warp.conf --license=$warpkey --device-name=$devicename
 elif [[ $account_type == 3 ]]; then
-  echo "ok"
+  yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
+  read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
+  if [[ -n $teams_token ]]; then
+    /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+  fi
 else
   ./warp-go --register --config=warp.conf
 fi
