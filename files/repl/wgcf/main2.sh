@@ -36,6 +36,14 @@ if [[ $account_type == 2 ]]; then
     red "WARP 账户许可证密钥格式输入错误，请重新输入！"
     read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
   done
+  sed -i "s/license_key.*/license_key = \"$warpkey\"/g" wgcf-account.toml
+  read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " devicename
+  green "注册 WARP+ 账户中, 如下方显示: 400 Bad Request, 则使用 WARP 免费版账户"
+  if [[ -n $devicename ]]; then
+    ./wgcf update --name $(echo $devicename | sed s/[[:space:]]/_/g)
+  else
+    ./wgcf update
+  fi
 elif [[ $account_type == 3 ]]; then
   yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
   yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
