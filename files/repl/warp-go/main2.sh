@@ -41,9 +41,10 @@ if [[ $account_type == 2 ]]; then
     read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
   done
   read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " devicename
-  /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --license=$warpkey --device-name=$devicename
+  ./warp-go --register --config=./warp.conf --license=$warpkey --device-name=$devicename
 elif [[ $account_type == 3 ]]; then
   echo "ok"
 else
-  echo "ok"
+  ./warp-go --register --config=warp.conf
 fi
+./warp-go --config=warp.conf --export-wireguard=proxy.conf
