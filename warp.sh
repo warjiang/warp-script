@@ -1756,7 +1756,7 @@ wpgo_account() {
             rm -f /opt/warp-go/warp.conf
             until [[ -e /opt/warp-go/warp.conf ]]; do
                 yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --team-config $teams_token
             done
 
             # 应用 WARP-GO 配置
