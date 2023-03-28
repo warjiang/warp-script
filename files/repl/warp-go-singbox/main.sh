@@ -60,6 +60,6 @@ fi
 clear
 green "WARP-GO 的 Sing-box 配置文件已生成成功！"
 yellow "下面是 Sing-box 配置文件内容："
-cat proxy.json
+red "$(cat proxy.json)"
 echo ""
 yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"
