@@ -29,9 +29,9 @@ echo -e " ${GREEN}3.${PLAIN} WARP Teams"
 echo ""
 read -p "请输入选项 [1-3]: " account_type
 if [[ $account_type == 2 ]]; then
-
+  echo "ok"
 elif [[ $account_type == 3 ]]; then
-
+  echo "ok"
 else
-
+  echo "ok"
 fi
