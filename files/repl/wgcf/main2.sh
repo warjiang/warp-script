@@ -51,3 +51,13 @@ elif [[ $account_type == 3 ]]; then
 else
   echo "ok"
 fi
+
+clear
+green "WGCF 的 WireGuard 配置文件已生成成功！"
+yellow "下面是配置文件内容："
+cat wgcf-profile.conf
+echo ""
+yellow "下面是配置文件分享二维码："
+qrencode -t ansiutf8 < wgcf-profile.conf
+echo ""
+yellow "请在本地使用此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP"

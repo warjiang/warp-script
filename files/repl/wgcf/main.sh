@@ -46,7 +46,7 @@ fi
 ./wgcf generate
 
 clear
-green "Wgcf 的 WireGuard 配置文件已生成成功！"
+green "WGCF 的 WireGuard 配置文件已生成成功！"
 yellow "下面是配置文件内容："
 cat wgcf-profile.conf
 echo ""
