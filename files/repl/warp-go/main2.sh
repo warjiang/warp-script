@@ -54,6 +54,7 @@ elif [[ $account_type == 3 ]]; then
 else
   ./warp-go --register --config=warp.conf
 fi
+
 ./warp-go --config=warp.conf --export-wireguard=proxy.conf
 
 clear
