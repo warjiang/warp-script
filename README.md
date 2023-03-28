@@ -22,13 +22,15 @@ WARP-Cli 是由 CloudFlare 官方提供的 Linux 客户端，但是目前仅支�
 
 对于没遭到 CloudFlare 封禁的大部分区域、且 CPU 架构为 AMD64 的建议：WARP-Cli > WireProxy
 
-### 3. 对于直接使用 WireGuard WARP 节点的
+### 3. 对于直接使用 WireGuard / Sing-box WARP 节点的
 
 可使用本脚本的 11 选项进行提取。如果你不想在 VPS 安装 WARP 或者是没有 VPS 的用户，可从下面两个 repl 的其中之一提取
 
 WGCF：https://replit.com/@misaka-blog/wgcf-profile-generator
 
 WARP-GO：https://replit.com/@misaka-blog/warpgo-profile-generator
+
+Sing-box：https://replit.com/@misaka-blog/warpgo-sbfile-generator
 
 > 由于配置文件是由服务器生成的，由于每位用户的网络环境不一样，故不会帮助用户设置优选 WARP Endpoint IP。可参考此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP 并替换 engage.cloudflareclient.com:2408 为自己本地网络环境可用的 WARP Endpoint IP
 
@@ -57,19 +59,19 @@ curl -4 ip.p3terx.com
 
 由于 WARP-Cli 的开发进度缓慢，如仅支持 AMD64 的 CPU 架构、不支持 IPv6 Only 的 VPS，所以说脚本使用了多种第三方客户端，尽力满足大多数用户的相关需求
 
-### WARP Endpoint IP 优选脚本
+## WARP Endpoint IP 优选脚本
 
-#### For Windows
+### For Windows
 
 下载地址：https://gitlab.com/Misaka-blog/warp-script/-/blob/main/files/warp-yxip/warp-yxip-win.7z
 
-#### For MacOS
+### For MacOS
 
 ```shell
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip-mac.sh && bash warp-yxip-mac.sh
 ```
 
-#### For Linux （包括安卓 Termux 和 iOS 的 iSH）
+### For Linux （包括安卓 Termux 和 iOS 的 iSH）
 
 ```shell
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
