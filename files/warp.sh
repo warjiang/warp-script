@@ -2283,5 +2283,4 @@ menu() {
         *) exit 1 ;;
     esac
 }
-
 before_showinfo && menu
