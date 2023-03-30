@@ -1711,6 +1711,7 @@ wpgo_account() {
 
         # 询问用户是否使用自定义设备名称，如未使用则使用 WARP-GO 随机生成的六位设备名
         read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
+        [[ -z $device_name ]] && device_name=$(date +%s%N | md5sum | cut -c 1-6)
 
         # 删除原来的配置文件，并使用 WARP+ 账户密钥注册
         rm -f /opt/warp-go/warp.conf
@@ -1769,11 +1770,15 @@ wpgo_account() {
         read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
 
         if [[ -n $teams_token ]]; then
+            # 询问用户是否使用自定义设备名称，如未使用则使用 WARP-GO 随机生成的六位设备名
+            read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
+            [[ -z $device_name ]] && device_name=$(date +%s%N | md5sum | cut -c 1-6)
+
             # 删除原来的配置文件，并使用 Teams TOKEN 注册
             rm -f /opt/warp-go/warp.conf
             until [[ -e /opt/warp-go/warp.conf ]]; do
                 yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --team-config $teams_token
+                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --team-config=$teams_token --device-name=$device_name
             done
 
             # 应用 WARP-GO 配置
@@ -2283,4 +2288,5 @@ menu() {
         *) exit 1 ;;
     esac
 }
+
 before_showinfo && menu
