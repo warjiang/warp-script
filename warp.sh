@@ -1660,7 +1660,7 @@ wgcf_account() {
         private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
         private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
         sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf.conf;
 
         # 启动 WGCF，并检查 WGCF 是否启动成功
         check_wgcf
@@ -1947,7 +1947,7 @@ wireproxy_account() {
             private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
             sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
             sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
-            sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+            sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf;
 
             # 启动 WireProxy，并检查是否正常运行
             yellow "正在启动 WireProxy-WARP 代理模式"
