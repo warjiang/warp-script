@@ -46,7 +46,10 @@ elif [[ $account_type == 3 ]]; then
   yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
   read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
   if [[ -n $teams_token ]]; then
-    ./warp-go --register --config=warp.conf --team-config=$teams_token
+    read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
+    [[ -z $device_name ]] && device_name=$(date +%s%N | md5sum | cut -c 1-6)
+    
+    ./warp-go --register --config=warp.conf --team-config=$teams_token --device-name=$device_name
   else
     red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
     exit 1
