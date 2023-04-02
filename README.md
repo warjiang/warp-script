@@ -77,7 +77,7 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/wa
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
 ```
 
-苹果 iSH 初始命令：`apk add -f openssh bash wget`
+苹果 iSH 初始命令：`apk add -f openssh bash wget`，如遇更新包卡着不动输入以下命令：`sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories`
 
 ## 鸣谢项目
 
