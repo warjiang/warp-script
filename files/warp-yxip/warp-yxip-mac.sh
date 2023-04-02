@@ -204,9 +204,9 @@ menu(){
     echo ""
     read -rp "请输入选项 [0-2]: " menuInput
     case $menuInput in
-        * ) endpoint4 ;;
         2 ) endpoint6 ;;
         0 ) exit 1 ;;
+        * ) endpoint4 ;;
     esac
 }
 
