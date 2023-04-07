@@ -1214,7 +1214,7 @@ install_wireproxy() {
         systemctl start warp-go
         systemctl enable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick start wgcf >/dev/null 2>&1
+        wg-quick up wgcf >/dev/null 2>&1
         systemctl enable wg-quick@wgcf
     fi
 
