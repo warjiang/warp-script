@@ -535,21 +535,35 @@ init_wgcf() {
 
 # 利用 WGCF 注册 CloudFlare WARP 账户
 register_wgcf() {
-    # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
-    if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
-        cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
+    # 由于 CloudFlare 近期对俄罗斯地域限制，故无法使用官方渠道注册。如 VPS 地区为为俄罗斯则换用 Zero Cloud 提供的第三方 API 注册
+    if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
+        red "检测到 VPS 地域为俄罗斯，由于 CloudFlare 对用户新注册限制，将使用 Zero Cloud 第三方 API 进行注册"
+        yellow "正在向 CloudFlare WARP 注册账号"
+
+        # 请求 Zero Cloud API 接口，以获取 WGCF 配置文件
+        until [[ -e wgcf-account.toml ]]; do
+            rm -f wgcf-account.toml wgcf-profile.conf
+            wget https://api.zeroteam.top/warp?format=wgcf -O wgcf.zip
+            unzip wgcf.zip && rm -f wgcf.zip
+            chmod +x wgcf-account.toml && chmod +x wgcf-profile.conf
+        done
+    else
+        # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
+        if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
+            cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
+        fi
+
+        # 注册 WARP 账户，直到注册成功为止
+        until [[ -e wgcf-account.toml ]]; do
+            yellow "正在向 CloudFlare WARP 注册账号, 如提示 429 Too Many Requests 错误请耐心等待脚本重试注册即可"
+            wgcf register --accept-tos
+            sleep 5
+        done
+        chmod +x wgcf-account.toml
+
+        # 生成 WireGuard 配置文件
+        wgcf generate && chmod +x wgcf-profile.conf
     fi
-
-    # 注册 WARP 账户，直到注册成功为止
-    until [[ -e wgcf-account.toml ]]; do
-        yellow "正在向 CloudFlare WARP 注册账号, 如提示 429 Too Many Requests 错误请耐心等待脚本重试注册即可"
-        wgcf register --accept-tos
-        sleep 5
-    done
-    chmod +x wgcf-account.toml
-
-    # 生成 WireGuard 配置文件
-    wgcf generate && chmod +x wgcf-profile.conf
 }
 
 # 配置 WGCF 的 WireGuard 配置文件
@@ -973,11 +987,23 @@ install_wpgo() {
     wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
     chmod +x /opt/warp-go/warp-go
 
-    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
-    until [[ -e /opt/warp-go/warp.conf ]]; do
-        yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-        /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-    done
+    # 由于 CloudFlare 近期对俄罗斯地域限制，故无法使用官方渠道注册。如 VPS 地区为为俄罗斯则换用 Zero Cloud 提供的第三方 API 注册
+    if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
+        red "检测到 VPS 地域为俄罗斯，由于 CloudFlare 对用户新注册限制，将使用 Zero Cloud 第三方 API 进行注册"
+        yellow "正在向 CloudFlare WARP 注册账号"
+
+        # 请求 Zero Cloud API 接口，以获取 WGCF 配置文件
+        until [[ -e /opt/warp-go/warp.conf ]]; do
+            wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
+            chmod +x /opt/warp-go/warp.conf
+        done
+    else
+        # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
+        until [[ -e /opt/warp-go/warp.conf ]]; do
+            yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+            /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+        done
+    fi
 
     # 设置 WARP-GO 的配置文件
     conf_wpgo
@@ -1214,7 +1240,7 @@ install_wireproxy() {
         systemctl start warp-go
         systemctl enable warp-go
     elif [[ -n $(type -P wg-quick) && -n $(type -P wgcf) ]]; then
-        wg-quick start wgcf >/dev/null 2>&1
+        wg-quick up wgcf >/dev/null 2>&1
         systemctl enable wg-quick@wgcf
     fi
 
