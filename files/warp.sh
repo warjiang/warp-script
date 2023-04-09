@@ -538,10 +538,10 @@ register_wgcf() {
     # 由于 CloudFlare 近期对俄罗斯地域限制，故无法使用官方渠道注册。如 VPS 地区为为俄罗斯则换用 Zero Cloud 提供的第三方 API 注册
     if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
         red "检测到 VPS 地域为俄罗斯，由于 CloudFlare 对用户新注册限制，将使用 Zero Cloud 第三方 API 进行注册"
-        yellow "正在向 CloudFlare WARP 注册账号"
 
         # 请求 Zero Cloud API 接口，以获取 WGCF 配置文件
         until [[ -e wgcf-account.toml ]]; do
+            yellow "正在向 Zero Cloud API 申请 WARP 账号，请稍等"
             rm -f wgcf-account.toml wgcf-profile.conf
             wget https://api.zeroteam.top/warp?format=wgcf -O wgcf.zip
             unzip wgcf.zip && rm -f wgcf.zip
@@ -990,10 +990,10 @@ install_wpgo() {
     # 由于 CloudFlare 近期对俄罗斯地域限制，故无法使用官方渠道注册。如 VPS 地区为为俄罗斯则换用 Zero Cloud 提供的第三方 API 注册
     if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
         red "检测到 VPS 地域为俄罗斯，由于 CloudFlare 对用户新注册限制，将使用 Zero Cloud 第三方 API 进行注册"
-        yellow "正在向 CloudFlare WARP 注册账号"
-
+        
         # 请求 Zero Cloud API 接口，以获取 WGCF 配置文件
         until [[ -e /opt/warp-go/warp.conf ]]; do
+            yellow "正在向 Zero Cloud API 申请 WARP 账号，请稍等"
             wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
             chmod +x /opt/warp-go/warp.conf
         done
