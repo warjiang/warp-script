@@ -529,24 +529,17 @@ install_wgcf_dual() {
 
 # 下载 WGCF
 init_wgcf() {
-    wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wgcf/wgcf-latest-linux-$(archAffix) -O /usr/local/bin/wgcf
+    wget --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wgcf/wgcf-latest-linux-$(archAffix) -O /usr/local/bin/wgcf
     chmod +x /usr/local/bin/wgcf
 }
 
 # 利用 WGCF 注册 CloudFlare WARP 账户
 register_wgcf() {
-    # 由于 CloudFlare 近期对俄罗斯地域限制，故无法使用官方渠道注册。如 VPS 地区为为俄罗斯则换用 Zero Cloud 提供的第三方 API 注册
     if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
-        red "检测到 VPS 地域为俄罗斯，由于 CloudFlare 对用户新注册限制，将使用 Zero Cloud 第三方 API 进行注册"
-
-        # 请求 Zero Cloud API 接口，以获取 WGCF 配置文件
-        until [[ -e wgcf-account.toml ]]; do
-            yellow "正在向 Zero Cloud API 申请 WARP 账号，请稍等"
-            rm -f wgcf-account.toml wgcf-profile.conf
-            wget https://api.zeroteam.top/warp?format=wgcf -O wgcf.zip
-            unzip wgcf.zip && rm -f wgcf.zip
-            chmod +x wgcf-account.toml && chmod +x wgcf-profile.conf
-        done
+        wget --no-check-certificate https://api.zeroteam.top/warp?format=wgcf -O wgcf.zip
+        unzip wgcf.zip
+        rm -f wgcf.zip
+        chmod +x wgcf-account.toml wgcf-profile.conf
     else
         # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
         if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
@@ -642,7 +635,7 @@ install_wgcf() {
     fi
     if [[ $SYSTEM == "Debian" ]]; then
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo wget curl unzip  lsb-release bc htop screen python3 inetutils-ping qrencode
+        ${PACKAGE_INSTALL[int]} sudo wget curl unzip lsb-release bc htop screen python3 inetutils-ping qrencode
         echo "deb http://deb.debian.org/debian $(lsb_release -sc)-backports main" | tee /etc/apt/sources.list.d/backports.list
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
@@ -969,10 +962,10 @@ install_wpgo() {
 
     # 安装 WARP-GO 必需依赖
     if [[ $SYSTEM == "CentOS" ]]; then
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip bc htop iputils screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
     else
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip bc htop inetutils-ping screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
     fi
 
     # IPv4 only VPS 开启 IPv6 支持
@@ -987,23 +980,11 @@ install_wpgo() {
     wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
     chmod +x /opt/warp-go/warp-go
 
-    # 由于 CloudFlare 近期对俄罗斯地域限制，故无法使用官方渠道注册。如 VPS 地区为为俄罗斯则换用 Zero Cloud 提供的第三方 API 注册
-    if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
-        red "检测到 VPS 地域为俄罗斯，由于 CloudFlare 对用户新注册限制，将使用 Zero Cloud 第三方 API 进行注册"
-
-        # 请求 Zero Cloud API 接口，以获取 WGCF 配置文件
-        until [[ -e /opt/warp-go/warp.conf ]]; do
-            yellow "正在向 Zero Cloud API 申请 WARP 账号，请稍等"
-            wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
-            chmod +x /opt/warp-go/warp.conf
-        done
-    else
-        # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
-        until [[ -e /opt/warp-go/warp.conf ]]; do
-            yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-            /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-        done
-    fi
+    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
+    until [[ -e /opt/warp-go/warp.conf ]]; do
+        yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+        /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+    done
 
     # 设置 WARP-GO 的配置文件
     conf_wpgo
@@ -1095,13 +1076,13 @@ install_warp_cli() {
     # 安装 WARP-Cli 及其依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} epel-release
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip net-tools bc htop iputils screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget net-tools bc htop iputils screen python3 qrencode
         rpm -ivh http://pkg.cloudflareclient.com/cloudflare-release-el8.rpm
         ${PACKAGE_INSTALL[int]} cloudflare-warp
     fi
     if [[ $SYSTEM == "Debian" ]]; then
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip lsb-release bc htop inetutils-ping screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop inetutils-ping screen python3 qrencode
         [[ -z $(type -P gpg 2>/dev/null) ]] && ${PACKAGE_INSTALL[int]} gnupg
         [[ -z $(apt list 2>/dev/null | grep apt-transport-https | grep installed) ]] && ${PACKAGE_INSTALL[int]} apt-transport-https
         curl https://pkg.cloudflareclient.com/pubkey.gpg | apt-key add -
@@ -1111,7 +1092,7 @@ install_warp_cli() {
     fi
     if [[ $SYSTEM == "Ubuntu" ]]; then
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip lsb-release bc htop inetutils-ping screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop inetutils-ping screen python3 qrencode
         curl https://pkg.cloudflareclient.com/pubkey.gpg | apt-key add -
         echo "deb http://pkg.cloudflareclient.com/ $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/cloudflare-client.list
         ${PACKAGE_UPDATE[int]}
@@ -1182,10 +1163,10 @@ uninstall_warp_cli() {
 install_wireproxy() {
     # 安装 WireProxy 依赖
     if [[ $SYSTEM == "CentOS" ]]; then
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip bc htop iputils screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
     else
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo curl wget unzip bc htop inetutils-ping screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
     fi
 
     # 下载 WireProxy
