@@ -64,9 +64,9 @@ wg3="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606
 wg4="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
 
 # 设置允许外部 IP 访问
-wg5='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv4
-wg6='sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv6
-wg7='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
+wg5='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv4
+wg6='sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv6
+wg7='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
 
 # 设置 WARP-GO 配置文件的监听 IP
 wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf'      # IPv4
@@ -81,10 +81,10 @@ wgo6='sed -i "s#.*PostUp.*#PostUp = ip -4 rule add from $(ip route get 1.1.1.1 |
 # 检测 VPS 处理器架构
 archAffix() {
     case "$(uname -m)" in
-    x86_64 | amd64) echo 'amd64' ;;
-    armv8 | arm64 | aarch64) echo 'arm64' ;;
-    s390x) echo 's390x' ;;
-    *) red "不支持的CPU架构!" && exit 1 ;;
+        x86_64 | amd64) echo 'amd64' ;;
+        armv8 | arm64 | aarch64) echo 'arm64' ;;
+        s390x) echo 's390x' ;;
+        *) red "不支持的CPU架构!" && exit 1 ;;
     esac
 }
 
@@ -529,27 +529,34 @@ install_wgcf_dual() {
 
 # 下载 WGCF
 init_wgcf() {
-    wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wgcf/wgcf-latest-linux-$(archAffix) -O /usr/local/bin/wgcf
+    wget --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wgcf/wgcf-latest-linux-$(archAffix) -O /usr/local/bin/wgcf
     chmod +x /usr/local/bin/wgcf
 }
 
 # 利用 WGCF 注册 CloudFlare WARP 账户
 register_wgcf() {
-    # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
-    if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
-        cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
+    if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
+        wget --no-check-certificate https://api.zeroteam.top/warp?format=wgcf -O wgcf.zip
+        unzip wgcf.zip
+        rm -f wgcf.zip
+        chmod +x wgcf-account.toml wgcf-profile.conf
+    else
+        # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
+        if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
+            cp -f /etc/wireguard/wgcf-account.toml /root/wgcf-account.toml
+        fi
+
+        # 注册 WARP 账户，直到注册成功为止
+        until [[ -e wgcf-account.toml ]]; do
+            yellow "正在向 CloudFlare WARP 注册账号, 如提示 429 Too Many Requests 错误请耐心等待脚本重试注册即可"
+            wgcf register --accept-tos
+            sleep 5
+        done
+        chmod +x wgcf-account.toml
+
+        # 生成 WireGuard 配置文件
+        wgcf generate && chmod +x wgcf-profile.conf
     fi
-
-    # 注册 WARP 账户，直到注册成功为止
-    until [[ -e wgcf-account.toml ]]; do
-        yellow "正在向 CloudFlare WARP 注册账号, 如提示 429 Too Many Requests 错误请耐心等待脚本重试注册即可"
-        wgcf register --accept-tos
-        sleep 5
-    done
-    chmod +x wgcf-account.toml
-
-    # 生成 WireGuard 配置文件
-    wgcf generate && chmod +x wgcf-profile.conf
 }
 
 # 配置 WGCF 的 WireGuard 配置文件
@@ -617,25 +624,25 @@ install_wgcf() {
     # 安装 WGCF 必需依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} epel-release
-        ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget unzip iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
         if [[ $OSID == 9 ]] && [[ -z $(type -P resolvconf) ]]; then
             wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/resolvconf -O /usr/sbin/resolvconf
             chmod +x /usr/sbin/resolvconf
         fi
     fi
     if [[ $SYSTEM == "Fedora" ]]; then
-        ${PACKAGE_INSTALL[int]} sudo curl wget iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget unzip iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
     fi
     if [[ $SYSTEM == "Debian" ]]; then
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo wget curl lsb-release bc htop screen python3 inetutils-ping qrencode
+        ${PACKAGE_INSTALL[int]} sudo wget curl unzip lsb-release bc htop screen python3 inetutils-ping qrencode
         echo "deb http://deb.debian.org/debian $(lsb_release -sc)-backports main" | tee /etc/apt/sources.list.d/backports.list
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
     fi
     if [[ $SYSTEM == "Ubuntu" ]]; then
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo curl wget lsb-release bc htop screen python3 inetutils-ping qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget unzip lsb-release bc htop screen python3 inetutils-ping qrencode
         ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
     fi
 
@@ -973,11 +980,16 @@ install_wpgo() {
     wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
     chmod +x /opt/warp-go/warp-go
 
-    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
-    until [[ -e /opt/warp-go/warp.conf ]]; do
-        yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-        /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-    done
+    if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
+        wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
+        chmod +x /opt/warp-go/warp.conf
+    else
+        # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
+        until [[ -e /opt/warp-go/warp.conf ]]; do
+            yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+            /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+        done
+    fi
 
     # 设置 WARP-GO 的配置文件
     conf_wpgo
