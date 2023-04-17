@@ -981,8 +981,8 @@ install_wpgo() {
     chmod +x /opt/warp-go/warp-go
 
     if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
-        wget -O warp.zip
-        unzip warp.zip
+        wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
+        chmod +x /opt/warp-go/warp.conf
     else
         # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
         until [[ -e /opt/warp-go/warp.conf ]]; do
