@@ -980,11 +980,16 @@ install_wpgo() {
     wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
     chmod +x /opt/warp-go/warp-go
 
-    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
-    until [[ -e /opt/warp-go/warp.conf ]]; do
-        yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-        /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-    done
+    if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
+        wget -O warp.zip
+        unzip warp.zip
+    else
+        # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
+        until [[ -e /opt/warp-go/warp.conf ]]; do
+            yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+            /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+        done
+    fi
 
     # 设置 WARP-GO 的配置文件
     conf_wpgo
