@@ -86,6 +86,7 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/wa
 * Wgcf：https://github.com/ViRb3/wgcf
 * WARP-GO：https://gitlab.com/ProjectWARP/warp-go
 * 某匿名大佬的 CloudFlare WARP EndPoint IP 优选工具
+* Zero Cloud 的 WARP API
 
 ## 赞助
 
