@@ -32,7 +32,7 @@ WARP-GO：https://replit.com/@misaka-blog/warpgo-profile-generator
 
 Sing-box：https://replit.com/@misaka-blog/warpgo-sbfile-generator
 
-> 由于配置文件是由服务器生成的，由于每位用户的网络环境不一样，故不会帮助用户设置优选 WARP Endpoint IP。可参考此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP 并替换 engage.cloudflareclient.com:2408 为自己本地网络环境可用的 WARP Endpoint IP
+> 由于配置文件是由服务器生成的，并且每位用户的网络环境不一样，故不会帮助用户设置优选 WARP Endpoint IP。可参考此方法：https://blog.misaka.rest/2023/03/12/cf-warp-yxip/ 优选可用的 Endpoint IP 并替换 engage.cloudflareclient.com:2408 为自己本地网络环境可用的 WARP Endpoint IP
 
 ### 4. 在部分 IPv6 Only 的机器安装 WGCF-WARP
 
