@@ -2206,13 +2206,13 @@ before_showinfo() {
     [[ $netflix_wireproxy =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]]&& netflix_wireproxy="${RED}无法解锁 Netflix${PLAIN}"
 
     # 测试 ChatGPT 解锁情况
-    [[ $(curl -s4m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt4="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}支持访问 ChatGPT${PLAIN}"
-    [[ $(curl -s6m8 https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt6="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt6="${GREEN}支持访问 ChatGPT${PLAIN}"
+    [[ -n $(curl -s4m8 https://chat.openai.com/ -I | grep -qw "Sorry, you have been blocked") ]] && chatgpt4="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}支持访问 ChatGPT${PLAIN}"
+    [[ -n $(curl -s6m8 https://chat.openai.com/ -I | grep -qw "Sorry, you have been blocked") ]] && chatgpt6="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt6="${GREEN}支持访问 ChatGPT${PLAIN}"
     if [[ -n $cli_port ]]; then
-        [[ $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_cli="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}支持访问 ChatGPT${PLAIN}"
+        [[ -n $(curl -sx socks5h://localhost:$cli_port https://chat.openai.com/ -I | grep -qw "Sorry, you have been blocked") ]] && chatgpt_cli="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt_cli="${GREEN}支持访问 ChatGPT${PLAIN}"
     fi
     if [[ -n $wireproxy_port ]]; then
-        [[ $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep "text/plain") != "" ]] && chatgpt_wireproxy="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}支持访问 ChatGPT${PLAIN}"
+        [[ -n $(curl -sx socks5h://localhost:$wireproxy_port https://chat.openai.com/ -I | grep -qw "Sorry, you have been blocked") ]] && chatgpt_wireproxy="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt_wireproxy="${GREEN}支持访问 ChatGPT${PLAIN}"
     fi
 }
 
