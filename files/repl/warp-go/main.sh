@@ -56,7 +56,7 @@ elif [[ $account_type == 3 ]]; then
     exit 1
   fi
 else
-  ./warp-go --register --config=warp.conf
+  wget https://api.zeroteam.top/warp?format=warp-go -O warp.conf
 fi
 
 ./warp-go --config=warp.conf --export-wireguard=proxy.conf
