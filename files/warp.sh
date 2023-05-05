@@ -1727,9 +1727,8 @@ wpgo_account() {
         read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
         [[ -z $device_name ]] && device_name=$(date +%s%N | md5sum | cut -c 1-6)
 
-        # 删除原来的配置文件，并使用 WARP+ 账户密钥注册
-        rm -f /opt/warp-go/warp.conf
-        result=$(/opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --license=$warpkey --device-name=$devicename)
+        # 使用 WARP+ 账户密钥，升级原有的配置文件
+        result=$(/opt/warp-go/warp-go --update --config=/opt/warp-go/warp.conf --license=$warpkey --device-name=$devicename)
 
         # 判断是否升级成功，如果失败则还原 WARP 免费版账户
         if [[ $result == "Success" ]]; then
@@ -1755,10 +1754,8 @@ wpgo_account() {
 
             # 删除原来的配置文件，并重新注册
             rm -f /opt/warp-go/warp.conf
-            until [[ -e /opt/warp-go/warp.conf ]]; do
-                yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-            done
+            wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
+            chmod +x /opt/warp-go/warp.conf
 
             # 应用 WARP-GO 配置
             sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
@@ -1788,12 +1785,8 @@ wpgo_account() {
             read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
             [[ -z $device_name ]] && device_name=$(date +%s%N | md5sum | cut -c 1-6)
 
-            # 删除原来的配置文件，并使用 Teams TOKEN 注册
-            rm -f /opt/warp-go/warp.conf
-            until [[ -e /opt/warp-go/warp.conf ]]; do
-                yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-                /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf --team-config=$teams_token --device-name=$device_name
-            done
+            # 使用 Teams TOKEN 升级配置文件
+            /opt/warp-go/warp-go --update --config=/opt/warp-go/warp.conf --team-config=$teams_token --device-name=$device_name
 
             # 应用 WARP-GO 配置
             sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
@@ -1819,10 +1812,9 @@ wpgo_account() {
 
         # 删除原来的配置文件，并重新注册
         rm -f /opt/warp-go/warp.conf
-        until [[ -e /opt/warp-go/warp.conf ]]; do
-            yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-            /opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-        done
+        
+        wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
+        chmod +x /opt/warp-go/warp.conf
 
         # 应用 WARP-GO 配置
         sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf

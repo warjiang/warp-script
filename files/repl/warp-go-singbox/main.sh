@@ -41,7 +41,9 @@ if [[ $account_type == 2 ]]; then
     read -rp "输入 WARP 账户许可证密钥 (26个字符): " warpkey
   done
   read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " devicename
-  ./warp-go --register --config=./warp.conf --license=$warpkey --device-name=$devicename
+
+  wget https://api.zeroteam.top/warp?format=warp-go -O warp.conf && chmod +x warp.conf
+  ./warp-go --update --config=./warp.conf --license=$warpkey --device-name=$device_name
 elif [[ $account_type == 3 ]]; then
   yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
   read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
@@ -49,7 +51,8 @@ elif [[ $account_type == 3 ]]; then
     read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
     [[ -z $device_name ]] && device_name=$(date +%s%N | md5sum | cut -c 1-6)
     
-    ./warp-go --register --config=warp.conf --team-config=$teams_token --device-name=$device_name
+    wget https://api.zeroteam.top/warp?format=warp-go -O warp.conf && chmod +x warp.conf
+    ./warp-go --update --config=warp.conf --team-config=$teams_token --device-name=$device_name
   else
     red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
     exit 1
