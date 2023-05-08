@@ -981,8 +981,10 @@ install_wpgo() {
     mkdir -p /opt/warp-go/
     wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
     chmod +x /opt/warp-go/warp-go
+
     wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
     chmod +x /opt/warp-go/warp.conf
+    sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
     
     #if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
         #wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
