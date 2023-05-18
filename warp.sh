@@ -81,9 +81,10 @@ wgo6='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 1.1.1.1 
 # 检测 VPS 处理器架构
 archAffix() {
     case "$(uname -m)" in
-        x86_64 | amd64) echo 'amd64' ;;
-        armv8 | arm64 | aarch64) echo 'arm64' ;;
-        s390x) echo 's390x' ;;
+        i386 | i686 ) echo '386' ;;
+        x86_64 | amd64 ) echo 'amd64' ;;
+        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
+        s390x ) echo 's390x' ;;
         *) red "不支持的CPU架构!" && exit 1 ;;
     esac
 }
@@ -622,6 +623,9 @@ install_wgcf() {
     stack_priority
 
     # 安装 WGCF 必需依赖
+    if [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep net-tools iproute2 openresolv openrc iptables ip6tables wireguard-tools
+    fi
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} epel-release
         ${PACKAGE_INSTALL[int]} sudo curl wget unzip iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
@@ -965,6 +969,8 @@ install_wpgo() {
     # 安装 WARP-GO 必需依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
+    elif [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep bc htop iputils screen python3 qrencode
     else
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
@@ -1175,6 +1181,8 @@ install_wireproxy() {
     # 安装 WireProxy 依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
+    elif [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep bc htop iputils screen python3 qrencode
     else
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode

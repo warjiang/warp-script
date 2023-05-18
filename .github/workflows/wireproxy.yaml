@@ -11,9 +11,13 @@ jobs:
       - uses: actions/checkout@v3.3.0
       - name: Fetch wireproxy to latest version
         run: |
-          rm -f files/wireproxy/wireproxy-latest-linux-amd64 files/wireproxy/wireproxy-latest-linux-arm64 files/wireproxy/wireproxy-latest-linux-s390x files/wireproxy/wireproxy-fetchlog.txt
+          rm -f files/wireproxy/wireproxy-latest-linux-386 files/wireproxy/wireproxy-latest-linux-amd64 files/wireproxy/wireproxy-latest-linux-arm64 files/wireproxy/wireproxy-latest-linux-s390x files/wireproxy/wireproxy-fetchlog.txt
           actions_date=$(date)
           repo_last_ver=$(curl -Ls "https://api.github.com/repos/octeep/wireproxy/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+          wget -N https://github.com/octeep/wireproxy/releases/download/$repo_last_ver/wireproxy_linux_386.tar.gz
+          tar -zxvf wireproxy_linux_386.tar.gz
+          rm -f wireproxy_linux_386.tar.gz
+          mv -f wireproxy files/wireproxy/wireproxy-latest-linux-386
           wget -N https://github.com/octeep/wireproxy/releases/download/$repo_last_ver/wireproxy_linux_amd64.tar.gz
           tar -zxvf wireproxy_linux_amd64.tar.gz
           rm -f wireproxy_linux_amd64.tar.gz
@@ -38,8 +42,3 @@ jobs:
           git add .
           git commit -m "CI: Auto fetch wireproxy at $(date +"%m-%d %H:%M")"
           git push
-      - name: Refresh Jsdelivr cache
-        run: |
-          curl https://purge.jsdelivr.net/gh/Misaka-blog/cfwarp-script/files/wireproxy/wireproxy-latest-linux-amd64
-          curl https://purge.jsdelivr.net/gh/Misaka-blog/cfwarp-script/files/wireproxy/wireproxy-latest-linux-arm64
-          curl https://purge.jsdelivr.net/gh/Misaka-blog/cfwarp-script/files/wireproxy/wireproxy-latest-linux-s390x

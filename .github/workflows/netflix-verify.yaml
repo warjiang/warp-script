@@ -29,8 +29,3 @@ jobs:
           git add .
           git commit -m "CI: Auto fetch Netflix verify at $(date +"%m-%d %H:%M")"
           git push
-      - name: Refresh Jsdelivr cache
-        run: |
-          curl https://purge.jsdelivr.net/gh/Misaka-blog/cfwarp-script/files/netflix-verify/nf-linux-amd64
-          curl https://purge.jsdelivr.net/gh/Misaka-blog/cfwarp-script/files/netflix-verify/nf-linux-arm64
-          curl https://purge.jsdelivr.net/gh/Misaka-blog/cfwarp-script/files/netflix-verify/nf-linux-s390x
