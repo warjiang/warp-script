@@ -995,7 +995,9 @@ install_wpgo() {
     if [[ ! -f /opt/warp-go/warp.conf ]]; then
         wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
         chmod +x main-linux-$(archAffix)
-        result_output=$(./main-linux-\$\(archAffix\))
+        
+        arch=$(archAffix)
+        result_output=$(./main-linux-$arch)
         
         device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
         private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
