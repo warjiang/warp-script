@@ -990,6 +990,40 @@ install_wpgo() {
 
     wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
     chmod +x /opt/warp-go/warp.conf
+
+    # 备用 API 注册方案
+    if [[ ! -f /opt/warp-go/warp.conf ]]; then
+        wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
+        chmod +x main-linux-$(archAffix)
+        
+        arch=$(archAffix)
+        result_output=$(./main-linux-$arch)
+        
+        device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
+        private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
+        warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
+
+        cat << EOF > /opt/warp-go/warp.conf
+[Account]
+Device = $device_id
+PrivateKey = $private_key
+Token = $warp_token
+Type = free
+Name = WARP
+MTU = 1280
+
+[Peer]
+PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+Endpoint = 162.159.192.8:0
+Endpoint6 = [2606:4700:d0::a29f:c008]:0
+# AllowedIPs = 0.0.0.0/0
+# AllowedIPs = ::/0
+KeepAlive = 30
+EOF
+
+        rm -f main-linux-$(archAffix)
+    fi
+
     sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
     
     #if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
