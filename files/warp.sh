@@ -81,9 +81,10 @@ wgo6='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 1.1.1.1 
 # 检测 VPS 处理器架构
 archAffix() {
     case "$(uname -m)" in
-        x86_64 | amd64) echo 'amd64' ;;
-        armv8 | arm64 | aarch64) echo 'arm64' ;;
-        s390x) echo 's390x' ;;
+        i386 | i686 ) echo '386' ;;
+        x86_64 | amd64 ) echo 'amd64' ;;
+        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
+        s390x ) echo 's390x' ;;
         *) red "不支持的CPU架构!" && exit 1 ;;
     esac
 }
@@ -622,6 +623,9 @@ install_wgcf() {
     stack_priority
 
     # 安装 WGCF 必需依赖
+    if [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep net-tools iproute2 openresolv openrc iptables ip6tables wireguard-tools
+    fi
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} epel-release
         ${PACKAGE_INSTALL[int]} sudo curl wget unzip iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
@@ -965,6 +969,8 @@ install_wpgo() {
     # 安装 WARP-GO 必需依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
+    elif [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep bc htop iputils screen python3 qrencode
     else
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
@@ -984,6 +990,38 @@ install_wpgo() {
 
     wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
     chmod +x /opt/warp-go/warp.conf
+
+    # 备用 API 注册方案
+    if [[ ! -f /opt/warp-go/warp.conf ]]; then
+        wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
+        chmod +x main-linux-$(archAffix)
+        result_output=$(./main-linux-\$\(archAffix\))
+        
+        device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
+        private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
+        warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
+
+        cat << EOF > /opt/warp-go/warp.conf
+[Account]
+Device = $device_id
+PrivateKey = $private_key
+Token = $warp_token
+Type = free
+Name = WARP
+MTU = 1280
+
+[Peer]
+PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+Endpoint = 162.159.192.8:0
+Endpoint6 = [2606:4700:d0::a29f:c008]:0
+# AllowedIPs = 0.0.0.0/0
+# AllowedIPs = ::/0
+KeepAlive = 30
+EOF
+
+        rm -f main-linux-$(archAffix)
+    fi
+
     sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
     
     #if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
@@ -1175,6 +1213,8 @@ install_wireproxy() {
     # 安装 WireProxy 依赖
     if [[ $SYSTEM == "CentOS" ]]; then
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
+    elif [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep bc htop iputils screen python3 qrencode
     else
         ${PACKAGE_UPDATE[int]}
         ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
