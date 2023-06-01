@@ -1679,26 +1679,70 @@ wgcf_account() {
         systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
 
-        # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
-        yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
-        yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
-        read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
-        if [[ -n $teamconfigurl ]]; then
-            # 将一些字符过滤，以便脚本识别出内容
-            teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
+        yellow "请选择申请 WARP Teams 账户方式"
+        echo ""
+        echo -e " ${GREEN}1.${PLAIN} 使用 Teams TOKEN ${YELLOW}(默认)${PLAIN}"
+        echo -e " ${GREEN}2.${PLAIN} 使用提取出来的 xml 配置文件"
+        echo ""
+        read -p "请输入选项 [1-2]: " team_type
 
-            # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
-            private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
-            private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
-            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-            sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
-            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
-            sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+        if [[ $team_type == 2 ]]; then
+            # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
+            yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
+            yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
+            read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
+            if [[ -n $teamconfigurl ]]; then
+                # 将一些字符过滤，以便脚本识别出内容
+                teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
 
-            # 启动 WGCF，并检查 WGCF 是否启动成功
-            check_wgcf
+                # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
+                private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
+                private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
+                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
+                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+
+                # 启动 WGCF，并检查 WGCF 是否启动成功
+                check_wgcf
+            else
+                red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+                exit 1
+            fi
         else
-            red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+            # 询问用户 WARP Teams 账户 TOKEN，并提示获取方式
+            yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
+            read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
+
+            if [[ -n $teams_token ]]; then
+                # 生成 WireGuard 公私钥及 WARP 设备 ID 和 FCM Token
+                private_key=$(wg genkey)
+                public_key=$(wg pubkey <<< "$private_key")
+                install_id=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
+                fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 134)"
+
+                # 使用 CloudFlare API 申请 Teams 配置信息
+                team_result=$(curl --silent --location --tlsv1.3 --request POST 'https://api.cloudflareclient.com/v0a2158/reg' \
+                --header 'User-Agent: okhttp/3.12.1' \
+                --header 'CF-Client-Version: a-6.10-2158' \
+                --header 'Content-Type: application/json' \
+                --header "Cf-Access-Jwt-Assertion: ${TEAM_TOKEN}" \
+                --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
+
+                # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
+                private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
+
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
+                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
+                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+
+                # 启动 WGCF，并检查 WGCF 是否启动成功
+                check_wgcf
+            else
+                red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
+                exit 1
+            fi
         fi
     else
         # 关闭 WGCF
