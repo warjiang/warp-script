@@ -1730,7 +1730,7 @@ wgcf_account() {
                 --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
 
                 # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
-                private_v6=$(expr "$TEAMS" : '.*"v6":[ ]*"\([^"]*\).*')
+                private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
 
                 sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
                 sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
