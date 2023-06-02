@@ -1731,7 +1731,6 @@ wgcf_account() {
 
                 # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
                 private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
-
                 sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf
                 sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf.conf
                 sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
@@ -1877,6 +1876,7 @@ wpgo_account() {
 
             # 使用 Teams TOKEN 升级配置文件
             /opt/warp-go/warp-go --update --config=/opt/warp-go/warp.conf --team-config=$teams_token --device-name=$device_name
+            sed -i "s/Type =.*/Type = team/g" /opt/warp-go/warp.conf
 
             # 应用 WARP-GO 配置
             sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf

@@ -105,6 +105,8 @@ EOF
     fi
 
     ./warp-go --update --config=warp.conf --team-config=$teams_token --device-name=$device_name
+
+    sed -i "s/Type =.*/Type = team/g" warp.conf
   else
     red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
     exit 1
