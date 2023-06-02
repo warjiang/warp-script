@@ -94,7 +94,7 @@ elif [[ $account_type == 3 ]]; then
       private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
       
       sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" wgcf-profile.conf;
-      sed -i "s#Address.*128#Address = $private_v6#g" wgcf-profile.conf;
+      sed -i "s#Address.*128#Address = $private_v6/128#g" wgcf-profile.conf;
     fi
   fi
 else
