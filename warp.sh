@@ -69,9 +69,9 @@ wg6='sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::111
 wg7='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
 
 # 设置 WARP-GO 配置文件的监听 IP
-wgo1='sed -i '\''s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g;0,/AllowedIPs/s//# &/'\'' /opt/warp-go/warp.conf'      # IPv4
-wgo2='sed -i '\''s#.*AllowedIPs.*#AllowedIPs = ::/0#g;0,/AllowedIPs/s//# &/'\'' /opt/warp-go/warp.conf'           # IPv6
-wgo3='sed -i '\''s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0,::/0#g;0,/AllowedIPs/s//# &/'\'' /opt/warp-go/warp.conf' # 双栈
+wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf'      # IPv4
+wgo2='sed -i "s#.*AllowedIPs.*#AllowedIPs = ::/0#g" /opt/warp-go/warp.conf'           # IPv6
+wgo3='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0,::/0#g" /opt/warp-go/warp.conf' # 双栈
 
 # 设置允许外部 IP 访问
 wgo4='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf'                                                                                                                                                                                                                                                                                                                      # IPv4
@@ -170,9 +170,9 @@ stack_priority() {
     echo ""
     read -rp "请选择选项 [1-3]：" priority
     case $priority in
-    1) echo "precedence ::ffff:0:0/96  100" >>/etc/gai.conf ;;
-    2) echo "label 2002::/16   2" >>/etc/gai.conf ;;
-    *) yellow "将使用 VPS 默认的 IP 优先级" ;;
+        1) echo "precedence ::ffff:0:0/96  100" >>/etc/gai.conf ;;
+        2) echo "label 2002::/16   2" >>/etc/gai.conf ;;
+        *) yellow "将使用 VPS 默认的 IP 优先级" ;;
     esac
 }
 
@@ -757,6 +757,44 @@ conf_wpgo() {
     echo $wpgo2 | sh
 }
 
+# 利用 WARP API，注册 WARP 免费版账号并应用至 WARP-GO
+register_wpgo(){
+    wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
+    chmod +x main-linux-$(archAffix)
+
+    # 运行 WARP API
+    arch=$(archAffix)
+    result_output=$(./main-linux-$arch)
+
+    # 获取设备 ID、私钥及 WARP TOKEN
+    device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
+    private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
+    warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
+
+    # 写入 WARP-GO 配置文件
+    cat <<EOF >/opt/warp-go/warp.conf
+[Account]
+Device = $device_id
+PrivateKey = $private_key
+Token = $warp_token
+Type = free
+Name = WARP
+MTU = 1280
+
+[Peer]
+PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
+Endpoint = 162.159.193.10:1701
+# AllowedIPs = 0.0.0.0/0
+# AllowedIPs = ::/0
+KeepAlive = 30
+EOF
+    sed -i '0,/AllowedIPs/{/AllowedIPs/d;}' /opt/warp-go/warp.conf
+    sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
+
+    # 删除 WARP API 工具
+    rm -f main-linux-$(archAffix)
+}
+
 # 检测 WARP-GO 是否正常运行
 check_wpgo() {
     yellow "正在启动 WARP-GO"
@@ -988,54 +1026,8 @@ install_wpgo() {
     wget -O /opt/warp-go/warp-go https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-go/warp-go-latest-linux-$(archAffix)
     chmod +x /opt/warp-go/warp-go
 
-    wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
-    chmod +x /opt/warp-go/warp.conf
-
-    # 备用 API 注册方案
-    if [[ ! -f /opt/warp-go/warp.conf ]]; then
-        wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
-        chmod +x main-linux-$(archAffix)
-
-        arch=$(archAffix)
-        result_output=$(./main-linux-$arch)
-
-        device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
-        private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
-        warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
-
-        cat <<EOF >/opt/warp-go/warp.conf
-[Account]
-Device = $device_id
-PrivateKey = $private_key
-Token = $warp_token
-Type = free
-Name = WARP
-MTU = 1280
-
-[Peer]
-PublicKey = bmXOC+F1FxEMF9dyiK2H5/1SUtzH0JuVo51h2wPfgyo=
-Endpoint = 162.159.192.8:0
-Endpoint6 = [2606:4700:d0::a29f:c008]:0
-# AllowedIPs = 0.0.0.0/0
-# AllowedIPs = ::/0
-KeepAlive = 30
-EOF
-
-        rm -f main-linux-$(archAffix)
-    fi
-
-    sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
-
-    #if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
-    #wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
-    #chmod +x /opt/warp-go/warp.conf
-    #else
-    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
-    #until [[ -e /opt/warp-go/warp.conf ]]; do
-    #yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-    #/opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-    #done
-    #fi
+    # 使用 WARP API，注册 WARP 免费账户
+    register_wpgo
 
     # 设置 WARP-GO 的配置文件
     conf_wpgo
@@ -1046,7 +1038,7 @@ EOF
 
     # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
     check_endpoint
-    sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "/Endpoint/s/.*/Endpoint = '"$best_endpoint"'/" /opt/warp-go/warp.conf
+    sed -i "/Endpoint/s/.*/Endpoint = "$best_endpoint"/" /opt/warp-go/warp.conf
 
     # 设置 WARP-GO 系统服务
     cat <<EOF >/lib/systemd/system/warp-go.service
@@ -1098,6 +1090,30 @@ uninstall_wpgo() {
     rm -rf /opt/warp-go /tmp/warp-go* /lib/systemd/system/warp-go.service
 
     green "WARP-GO 已彻底卸载成功!"
+}
+
+check_warp_cli(){
+    warp-cli --accept-tos connect >/dev/null 2>&1
+    warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+    sleep 2
+    if [[ ! $(ss -nltp) =~ 'warp-svc' ]]; then
+        red "WARP-Cli 代理模式安装失败"
+        green "建议如下："
+        yellow "1. 建议使用系统官方源升级系统及内核加速！如已使用第三方源及内核加速 ,请务必更新到最新版 ,或重置为系统官方源！"
+        yellow "2. 部分 VPS 系统过于精简 ,相关依赖需自行安装后再重试"
+        yellow "3. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+        exit 1
+    else
+        green "WARP-Cli 代理模式已启动成功！"
+        echo ""
+        red "下面是恰饭广告："
+        yellow "灵梦机场"
+        green "专线节点加速、支持流媒体解锁、支持ChatGPT、晚高峰4k秒开、大多为x0.5倍节点，这一切，仅9.9元"
+        yellow "优惠尽在：https://reimu.work/auth/register?code=aKKj"
+        yellow "TG群：https://t.me/ReimuCloudGrup"
+        echo ""
+        before_showinfo && show_info
+    fi
 }
 
 install_warp_cli() {
@@ -1174,27 +1190,7 @@ install_warp_cli() {
     warp-cli --accept-tos set-custom-endpoint "$best_endpoint" >/dev/null 2>&1
 
     # 启动 WARP-Cli，并检查是否正常运行
-    warp-cli --accept-tos connect >/dev/null 2>&1
-    warp-cli --accept-tos enable-always-on >/dev/null 2>&1
-    sleep 2
-    if [[ ! $(ss -nltp) =~ 'warp-svc' ]]; then
-        red "WARP-Cli 代理模式安装失败"
-        green "建议如下："
-        yellow "1. 建议使用系统官方源升级系统及内核加速！如已使用第三方源及内核加速 ,请务必更新到最新版 ,或重置为系统官方源！"
-        yellow "2. 部分 VPS 系统过于精简 ,相关依赖需自行安装后再重试"
-        yellow "3. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-        exit 1
-    else
-        green "WARP-Cli 代理模式已启动成功！"
-        echo ""
-        red "下面是恰饭广告："
-        yellow "灵梦机场"
-        green "专线节点加速、支持流媒体解锁、支持ChatGPT、晚高峰4k秒开、大多为x0.5倍节点，这一切，仅9.9元"
-        yellow "优惠尽在：https://reimu.work/auth/register?code=aKKj"
-        yellow "TG群：https://t.me/ReimuCloudGrup"
-        echo ""
-        before_showinfo && show_info
-    fi
+    check_warp_cli
 }
 
 uninstall_warp_cli() {
@@ -1207,19 +1203,57 @@ uninstall_warp_cli() {
     # 卸载 WARP-Cli
     ${PACKAGE_UNINSTALL[int]} cloudflare-warp
 
-    green "WARP-Cli客户端已彻底卸载成功!"
+    green "WARP-Cli 客户端已彻底卸载成功!"
+    before_showinfo && show_info
+}
+
+check_wireproxy(){
+    yellow "正在启动 WireProxy-WARP 代理模式"
+    systemctl start wireproxy-warp
+    wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+    sleep 2
+    retry_time=0
+    until [[ $wireproxy_status =~ on|plus ]]; do
+        retry_time=$((${retry_time} + 1))
+        red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
+        systemctl stop wireproxy-warp
+        systemctl start wireproxy-warp
+        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
+        if [[ $retry_time == 6 ]]; then
+            echo ""
+            red "安装 WireProxy-WARP 代理模式失败！"
+            green "建议如下："
+            yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
+            yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
+            yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
+            yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
+            yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
+            exit 1
+        fi
+        sleep 8
+    done
+    sleep 5
+    systemctl enable wireproxy-warp >/dev/null 2>&1
+    green "WireProxy-WARP 代理模式已启动成功!"
+    echo ""
+    red "下面是恰饭广告："
+    yellow "灵梦机场"
+    green "专线节点加速、支持流媒体解锁、支持ChatGPT、晚高峰4k秒开、大多为x0.5倍节点，这一切，仅9.9元"
+    yellow "优惠尽在：https://reimu.work/auth/register?code=aKKj"
+    yellow "TG群：https://t.me/ReimuCloudGrup"
+    echo ""
     before_showinfo && show_info
 }
 
 install_wireproxy() {
     # 安装 WireProxy 依赖
     if [[ $SYSTEM == "CentOS" ]]; then
-        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop iputils screen python3 qrencode wireguard-tools
     elif [[ $SYSTEM == "Alpine" ]]; then
-        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep bc htop iputils screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep bc htop iputils screen python3 qrencode wireguard-tools
     else
         ${PACKAGE_UPDATE[int]}
-        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode
+        ${PACKAGE_INSTALL[int]} sudo curl wget bc htop inetutils-ping screen python3 qrencode wireguard-tools
     fi
 
     # 下载 WireProxy
@@ -1309,41 +1343,7 @@ Restart=always
 TEXT
 
     # 启动 WireProxy，并检查是否正常运行
-    yellow "正在启动 WireProxy-WARP 代理模式"
-    systemctl start wireproxy-warp
-    wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-    sleep 2
-    retry_time=0
-    until [[ $wireproxy_status =~ on|plus ]]; do
-        retry_time=$((${retry_time} + 1))
-        red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
-        systemctl stop wireproxy-warp
-        systemctl start wireproxy-warp
-        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-        if [[ $retry_time == 6 ]]; then
-            echo ""
-            red "安装 WireProxy-WARP 代理模式失败！"
-            green "建议如下："
-            yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
-            yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
-            yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
-            yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
-            yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-            exit 1
-        fi
-        sleep 8
-    done
-    sleep 5
-    systemctl enable wireproxy-warp >/dev/null 2>&1
-    green "WireProxy-WARP 代理模式已启动成功!"
-    echo ""
-    red "下面是恰饭广告："
-    yellow "灵梦机场"
-    green "专线节点加速、支持流媒体解锁、支持ChatGPT、晚高峰4k秒开、大多为x0.5倍节点，这一切，仅9.9元"
-    yellow "优惠尽在：https://reimu.work/auth/register?code=aKKj"
-    yellow "TG群：https://t.me/ReimuCloudGrup"
-    echo ""
-    before_showinfo && show_info
+    check_wireproxy
 }
 
 uninstall_wireproxy() {
@@ -1359,7 +1359,7 @@ uninstall_wireproxy() {
         rm -f /usr/local/bin/wgcf /etc/wireguard/wgcf-account.toml
     fi
 
-    green "WireProxy-WARP代理模式已彻底卸载成功!"
+    green "WireProxy-WARP 代理模式已彻底卸载成功!"
     before_showinfo && show_info
 }
 
@@ -1392,20 +1392,7 @@ change_warp_port() {
         warp-cli --accept-tos set-proxy-port "$port" >/dev/null 2>&1
 
         # 启动 WARP-Cli，并检查是否正常运行
-        warp-cli --accept-tos connect >/dev/null 2>&1
-        warp-cli --accept-tos enable-always-on >/dev/null 2>&1
-        sleep 2
-        if [[ ! $(ss -nltp) =~ 'warp-svc' ]]; then
-            red "WARP-Cli 代理模式安装失败"
-            green "建议如下："
-            yellow "1. 建议使用系统官方源升级系统及内核加速！如已使用第三方源及内核加速 ,请务必更新到最新版 ,或重置为系统官方源！"
-            yellow "2. 部分 VPS 系统过于精简 ,相关依赖需自行安装后再重试"
-            yellow "3. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-            exit 1
-        else
-            green "WARP-Cli 代理模式已启动成功！"
-            before_showinfo && show_info
-        fi
+        check_warp_cli
     elif [[ $chport_mode == 2 ]]; then
         # 如 WireProxy 正在启动，则关闭
         if [[ -n $(ss -nltp | grep wireproxy) ]]; then
@@ -1429,34 +1416,7 @@ change_warp_port() {
         sed -i "s/$current_port/BindAddress = 127.0.0.1:$port/g" /etc/wireguard/proxy.conf
 
         # 启动 WireProxy，并检查是否正常运行
-        yellow "正在启动 WireProxy-WARP 代理模式"
-        systemctl start wireproxy-warp
-        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-        sleep 2
-        retry_time=0
-        until [[ $wireproxy_status =~ on|plus ]]; do
-            retry_time=$((${retry_time} + 1))
-            red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
-            systemctl stop wireproxy-warp
-            systemctl start wireproxy-warp
-            wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-            if [[ $retry_time == 6 ]]; then
-                echo ""
-                red "安装 WireProxy-WARP 代理模式失败！"
-                green "建议如下："
-                yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
-                yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
-                yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
-                yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
-                yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-                exit 1
-            fi
-            sleep 8
-        done
-        sleep 5
-        systemctl enable wireproxy-warp >/dev/null 2>&1
-        green "WireProxy-WARP 代理模式已启动成功!"
-        before_showinfo && show_info
+        check_wireproxy
     else
         red "输入错误，请重新输入"
         change_warp_port
@@ -1481,61 +1441,61 @@ switch_warp() {
     echo ""
     read -rp "请输入选项 [0-12]: " switch_input
     case $switch_input in
-    1)
-        systemctl start wg-quick@wgcf >/dev/null 2>&1
-        systemctl enable wg-quick@wgcf >/dev/null 2>&1
-        ;;
-    2)
-        wg-quick down wgcf 2>/dev/null
-        systemctl stop wg-quick@wgcf >/dev/null 2>&1
-        systemctl disable wg-quick@wgcf >/dev/null 2>&1
-        ;;
-    3)
-        wg-quick down wgcf 2>/dev/null
-        systemctl stop wg-quick@wgcf >/dev/null 2>&1
-        systemctl disable wg-quick@wgcf >/dev/null 2>&1
-        systemctl start wg-quick@wgcf >/dev/null 2>&1
-        systemctl enable wg-quick@wgcf >/dev/null 2>&1
-        ;;
-    4)
-        systemctl start warp-go
-        systemctl enable warp-go >/dev/null 2>&1
-        ;;
-    5)
-        systemctl stop warp-go
-        systemctl disable warp-go >/dev/null 2>&1
-        ;;
-    6)
-        systemctl stop warp-go
-        systemctl disable warp-go >/dev/null 2>&1
-        systemctl start warp-go
-        systemctl enable warp-go >/dev/null 2>&1
-        ;;
-    7)
-        warp-cli --accept-tos connect >/dev/null 2>&1
-        warp-cli --accept-tos enable-always-on >/dev/null 2>&1
-        ;;
-    8) warp-cli --accept-tos disconnect >/dev/null 2>&1 ;;
-    9)
-        warp-cli --accept-tos disconnect >/dev/null 2>&1
-        warp-cli --accept-tos connect >/dev/null 2>&1
-        warp-cli --accept-tos enable-always-on >/dev/null 2>&1
-        ;;
-    10)
-        systemctl start wireproxy-warp
-        systemctl enable wireproxy-warp
-        ;;
-    11)
-        systemctl stop wireproxy-warp
-        systemctl disable wireproxy-warp
-        ;;
-    12)
-        systemctl stop wireproxy-warp
-        systemctl disable wireproxy-warp
-        systemctl start wireproxy-warp
-        systemctl enable wireproxy-warp
-        ;;
-    *) exit 1 ;;
+        1)
+            systemctl start wg-quick@wgcf >/dev/null 2>&1
+            systemctl enable wg-quick@wgcf >/dev/null 2>&1
+            ;;
+        2)
+            wg-quick down wgcf 2>/dev/null
+            systemctl stop wg-quick@wgcf >/dev/null 2>&1
+            systemctl disable wg-quick@wgcf >/dev/null 2>&1
+            ;;
+        3)
+            wg-quick down wgcf 2>/dev/null
+            systemctl stop wg-quick@wgcf >/dev/null 2>&1
+            systemctl disable wg-quick@wgcf >/dev/null 2>&1
+            systemctl start wg-quick@wgcf >/dev/null 2>&1
+            systemctl enable wg-quick@wgcf >/dev/null 2>&1
+            ;;
+        4)
+            systemctl start warp-go
+            systemctl enable warp-go >/dev/null 2>&1
+            ;;
+        5)
+            systemctl stop warp-go
+            systemctl disable warp-go >/dev/null 2>&1
+            ;;
+        6)
+            systemctl stop warp-go
+            systemctl disable warp-go >/dev/null 2>&1
+            systemctl start warp-go
+            systemctl enable warp-go >/dev/null 2>&1
+            ;;
+        7)
+            warp-cli --accept-tos connect >/dev/null 2>&1
+            warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+            ;;
+        8) warp-cli --accept-tos disconnect >/dev/null 2>&1 ;;
+        9)
+            warp-cli --accept-tos disconnect >/dev/null 2>&1
+            warp-cli --accept-tos connect >/dev/null 2>&1
+            warp-cli --accept-tos enable-always-on >/dev/null 2>&1
+            ;;
+        10)
+            systemctl start wireproxy-warp
+            systemctl enable wireproxy-warp
+            ;;
+        11)
+            systemctl stop wireproxy-warp
+            systemctl disable wireproxy-warp
+            ;;
+        12)
+            systemctl stop wireproxy-warp
+            systemctl disable wireproxy-warp
+            systemctl start wireproxy-warp
+            systemctl enable wireproxy-warp
+            ;;
+        *) exit 1 ;;
     esac
 }
 
@@ -1637,6 +1597,9 @@ wgcf_account() {
         wg-quick down wgcf 2>/dev/null
         systemctl stop wg-quick@wgcf >/dev/null 2>&1
         systemctl disable wg-quick@wgcf >/dev/null 2>&1
+        
+        # 进入 /etc/wireguard 目录，以便后续操作
+        cd /etc/wireguard
 
         # 询问用户获取 WARP 账户许可证密钥，并应用到 WARP 账户配置文件中
         yellow "获取CloudFlare WARP账号密钥信息方法: "
@@ -1831,7 +1794,7 @@ wpgo_account() {
 
             # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
             check_endpoint
-            sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            sed -i "/Endpoint/s/.*/Endpoint = "$best_endpoint"/" /opt/warp-go/warp.conf
 
             # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
             check_wpgo
@@ -1843,8 +1806,9 @@ wpgo_account() {
 
             # 删除原来的配置文件，并重新注册
             rm -f /opt/warp-go/warp.conf
-            wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
-            chmod +x /opt/warp-go/warp.conf
+
+            # 使用 WARP API，注册 WARP 免费账户
+            register_wpgo
 
             # 应用 WARP-GO 配置
             sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
@@ -1856,7 +1820,7 @@ wpgo_account() {
 
             # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
             check_endpoint
-            sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            sed -i "/Endpoint/s/.*/Endpoint = "$best_endpoint"/" /opt/warp-go/warp.conf
 
             # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
             check_wpgo
@@ -1888,7 +1852,7 @@ wpgo_account() {
 
             # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
             check_endpoint
-            sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+            sed -i "/Endpoint/s/.*/Endpoint = "$best_endpoint"/" /opt/warp-go/warp.conf
 
             # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
             check_wpgo
@@ -1903,11 +1867,11 @@ wpgo_account() {
         # 删除原来的配置文件，并重新注册
         rm -f /opt/warp-go/warp.conf
 
-        wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
-        chmod +x /opt/warp-go/warp.conf
+        # 使用 WARP API，注册 WARP 免费账户
+        register_wpgo
 
         # 应用 WARP-GO 配置
-        sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
+        sed -i "s#.*AllowedIPs.*#${current_allowips}#g" /opt/warp-go/warp.conf
         echo $current_postip | sh
 
         # 检查最佳 MTU 值，并应用至 WARP-GO 配置文件
@@ -1916,7 +1880,7 @@ wpgo_account() {
 
         # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
         check_endpoint
-        sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
+        sed -i "/Endpoint/s/.*/Endpoint = "$best_endpoint"/" /opt/warp-go/warp.conf
 
         # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
         check_wpgo
@@ -1965,6 +1929,9 @@ wireproxy_account() {
         systemctl stop wireproxy-warp
         systemctl disable wireproxy-warp
 
+        # 进入 /etc/wireguard 目录，以便后续操作
+        cd /etc/wireguard
+
         # 询问用户获取 WARP 账户许可证密钥，并应用到 WARP 账户配置文件中
         yellow "获取CloudFlare WARP账号密钥信息方法: "
         green "电脑: 下载并安装CloudFlare WARP → 设置 → 偏好设置 → 账户 → 复制密钥到脚本中"
@@ -1997,85 +1964,75 @@ wireproxy_account() {
         sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
 
         # 启动 WireProxy，并检查是否正常运行
-        yellow "正在启动 WireProxy-WARP 代理模式"
-        systemctl start wireproxy-warp
-        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-        sleep 2
-        retry_time=0
-        until [[ $wireproxy_status =~ on|plus ]]; do
-            retry_time=$((${retry_time} + 1))
-            red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
-            systemctl stop wireproxy-warp
-            systemctl start wireproxy-warp
-            wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-            if [[ $retry_time == 6 ]]; then
-                echo ""
-                red "安装 WireProxy-WARP 代理模式失败！"
-                green "建议如下："
-                yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
-                yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
-                yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
-                yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
-                yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-                exit 1
-            fi
-            sleep 8
-        done
-        sleep 5
-        systemctl enable wireproxy-warp >/dev/null 2>&1
-        green "WireProxy-WARP 代理模式已启动成功!"
-        before_showinfo && show_info
+        check_wireproxy
     elif [[ $account_type == 3 ]]; then
         # 关闭 WireProxy
         systemctl stop wireproxy-warp
         systemctl disable wireproxy-warp
 
-        # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
-        yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
-        yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
-        read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
-        if [[ -n $teamconfigurl ]]; then
-            # 将一些字符过滤，以便脚本识别出内容
-            teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
+        # 进入 /etc/wireguard 目录，以便后续操作
+        cd /etc/wireguard
 
-            # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
-            private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
-            private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
-            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
-            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
-            sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf
+        yellow "请选择申请 WARP Teams 账户方式"
+        echo ""
+        echo -e " ${GREEN}1.${PLAIN} 使用 Teams TOKEN ${YELLOW}(默认)${PLAIN}"
+        echo -e " ${GREEN}2.${PLAIN} 使用提取出来的 xml 配置文件"
+        echo ""
+        read -p "请输入选项 [1-2]: " team_type
 
-            # 启动 WireProxy，并检查是否正常运行
-            yellow "正在启动 WireProxy-WARP 代理模式"
-            systemctl start wireproxy-warp
-            wireproxy_status=$(curl -sx socks5h://localhost:$wireproxy_port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-            sleep 2
-            retry_time=0
-            until [[ $wireproxy_status =~ on|plus ]]; do
-                retry_time=$((${retry_time} + 1))
-                red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
-                systemctl stop wireproxy-warp
-                systemctl start wireproxy-warp
-                wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-                if [[ $retry_time == 6 ]]; then
-                    echo ""
-                    red "安装 WireProxy-WARP 代理模式失败！"
-                    green "建议如下："
-                    yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
-                    yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
-                    yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
-                    yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
-                    yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-                    exit 1
-                fi
-                sleep 8
-            done
-            sleep 5
-            systemctl enable wireproxy-warp >/dev/null 2>&1
-            green "WireProxy-WARP 代理模式已启动成功!"
-            before_showinfo && show_info
+        if [[ $team_type == 2 ]]; then
+            # 询问用户获取 WARP Teams 账户 xml 文件配置链接，并提示获取方式及上传方法
+            yellow "获取 WARP Teams 账户 xml 配置文件方法：https://blog.misaka.rest/2023/02/11/wgcfteam-config/"
+            yellow "请将提取到的 xml 配置文件上传至：https://gist.github.com"
+            read -rp "请粘贴 WARP Teams 账户配置文件链接：" teamconfigurl
+            if [[ -n $teamconfigurl ]]; then
+                # 将一些字符过滤，以便脚本识别出内容
+                teams_config=$(curl -sSL "$teamconfigurl" | sed "s/\"/\&quot;/g")
+
+                # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
+                private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
+                private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
+                sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf
+
+                # 启动 WireProxy，并检查是否正常运行
+                check_wireproxy
+            else
+                red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+            fi
         else
-            red "未提供WARP Teams 账户配置文件链接，脚本退出！"
+            # 询问用户 WARP Teams 账户 TOKEN，并提示获取方式
+            yellow "请在此网站：https://web--public--warp-team-api--coia-mfs4.code.run/ 获取你的 WARP Teams 账户 TOKEN"
+            read -rp "请输入 WARP Teams 账户的 TOKEN：" teams_token
+
+            if [[ -n $teams_token ]]; then
+                # 生成 WireGuard 公私钥及 WARP 设备 ID 和 FCM Token
+                private_key=$(wg genkey)
+                public_key=$(wg pubkey <<<"$private_key")
+                install_id=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
+                fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 134)"
+
+                # 使用 CloudFlare API 申请 Teams 配置信息
+                team_result=$(curl --silent --location --tlsv1.3 --request POST 'https://api.cloudflareclient.com/v0a2158/reg' \
+                    --header 'User-Agent: okhttp/3.12.1' \
+                    --header 'CF-Client-Version: a-6.10-2158' \
+                    --header 'Content-Type: application/json' \
+                    --header "Cf-Access-Jwt-Assertion: ${TEAM_TOKEN}" \
+                    --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
+
+                # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
+                private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
+                sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf
+
+                # 启动 WireProxy，并检查是否正常运行
+                check_wireproxy
+            else
+                red "未输入 WARP Teams 账户 TOKEN，脚本退出！"
+                exit 1
+            fi
         fi
     else
         # 关闭 WireProxy
@@ -2097,34 +2054,7 @@ wireproxy_account() {
         sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
 
         # 启动 WireProxy，并检查是否正常运行
-        yellow "正在启动 WireProxy-WARP 代理模式"
-        systemctl start wireproxy-warp
-        wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-        sleep 2
-        retry_time=0
-        until [[ $wireproxy_status =~ on|plus ]]; do
-            retry_time=$((${retry_time} + 1))
-            red "启动 WireProxy-WARP 代理模式失败，正在尝试重启，重试次数：$retry_time"
-            systemctl stop wireproxy-warp
-            systemctl start wireproxy-warp
-            wireproxy_status=$(curl -sx socks5h://localhost:$port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-            if [[ $retry_time == 6 ]]; then
-                echo ""
-                red "安装 WireProxy-WARP 代理模式失败！"
-                green "建议如下："
-                yellow "1. 强烈建议使用官方源升级系统及内核加速！如已使用第三方源及内核加速，请务必更新到最新版，或重置为官方源"
-                yellow "2. 部分 VPS 系统极度精简，相关依赖需自行安装后再尝试"
-                yellow "3. 查看 https://www.cloudflarestatus.com/ ，你当前VPS就近区域可能处于黄色的【Re-routed】状态"
-                yellow "4. WGCF 在香港、美西区域遭到 CloudFlare 官方封禁"
-                yellow "5. 脚本可能跟不上时代, 建议截图发布到 GitLab Issues 或 TG 群询问"
-                exit 1
-            fi
-            sleep 8
-        done
-        sleep 5
-        systemctl enable wireproxy-warp >/dev/null 2>&1
-        green "WireProxy-WARP 代理模式已启动成功!"
-        before_showinfo && show_info
+        check_wireproxy
     fi
 }
 
