@@ -1786,7 +1786,7 @@ wpgo_account() {
     [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo4
     [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo5
     [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo6
-    [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo6
+    [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo6
 
     yellow "请选择需要切换的 WARP 账户类型"
     echo ""

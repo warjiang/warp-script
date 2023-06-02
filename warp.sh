@@ -64,8 +64,8 @@ wg3="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606
 wg4="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
 
 # 设置允许外部 IP 访问
-wg5='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                           # IPv4
-wg6='sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # IPv6
+wg5='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                                                # IPv4
+wg6='sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                      # IPv6
 wg7='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
 
 # 设置 WARP-GO 配置文件的监听 IP
@@ -74,17 +74,17 @@ wgo2='sed -i '\''s#.*AllowedIPs.*#AllowedIPs = ::/0#g;0,/AllowedIPs/s//# &/'\'' 
 wgo3='sed -i '\''s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0,::/0#g;0,/AllowedIPs/s//# &/'\'' /opt/warp-go/warp.conf' # 双栈
 
 # 设置允许外部 IP 访问
-wgo4='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf'                            # IPv4
-wgo5='sed -i "/\[Script\]/a PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf'  # IPv6
+wgo4='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf'                                                                                                                                                                                                                                                                                                                      # IPv4
+wgo5='sed -i "/\[Script\]/a PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf'                                                                                                                                                                                                                                                                                            # IPv6
 wgo6='sed -i "/\[Script\]/a PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf && sed -i "/\[Script\]/a PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP "src \K\S+") lookup main\n" /opt/warp-go/warp.conf' # 双栈
 
 # 检测 VPS 处理器架构
 archAffix() {
     case "$(uname -m)" in
-        i386 | i686 ) echo '386' ;;
-        x86_64 | amd64 ) echo 'amd64' ;;
-        armv8 | arm64 | aarch64 ) echo 'arm64' ;;
-        s390x ) echo 's390x' ;;
+        i386 | i686) echo '386' ;;
+        x86_64 | amd64) echo 'amd64' ;;
+        armv8 | arm64 | aarch64) echo 'arm64' ;;
+        s390x) echo 's390x' ;;
         *) red "不支持的CPU架构!" && exit 1 ;;
     esac
 }
@@ -159,9 +159,9 @@ check_tun() {
 }
 
 # 修改 IPv4 / IPv6 优先级设置
-stack_priority(){
+stack_priority() {
     [[ -e /etc/gai.conf ]] && sed -i '/^precedence \:\:ffff\:0\:0/d;/^label 2002\:\:\/16/d' /etc/gai.conf
-    
+
     yellow "选择 IPv4 / IPv6 优先级"
     echo ""
     echo -e " ${GREEN}1.${PLAIN} IPv4 优先"
@@ -170,9 +170,9 @@ stack_priority(){
     echo ""
     read -rp "请选择选项 [1-3]：" priority
     case $priority in
-        1 ) echo "precedence ::ffff:0:0/96  100" >> /etc/gai.conf ;;
-        2 ) echo "label 2002::/16   2" >> /etc/gai.conf ;;
-        * ) yellow "将使用 VPS 默认的 IP 优先级" ;;
+    1) echo "precedence ::ffff:0:0/96  100" >>/etc/gai.conf ;;
+    2) echo "label 2002::/16   2" >>/etc/gai.conf ;;
+    *) yellow "将使用 VPS 默认的 IP 优先级" ;;
     esac
 }
 
@@ -338,7 +338,7 @@ check_endpoint() {
     fi
 
     # 将生成的 IP 段列表放到 ip.txt 里，待程序优选
-    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u > ip.txt
+    echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u >ip.txt
 
     # 取消 Linux 自带的线程限制，以便生成优选 Endpoint IP
     ulimit -n 102400
@@ -995,15 +995,15 @@ install_wpgo() {
     if [[ ! -f /opt/warp-go/warp.conf ]]; then
         wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
         chmod +x main-linux-$(archAffix)
-        
+
         arch=$(archAffix)
         result_output=$(./main-linux-$arch)
-        
+
         device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
         private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
         warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
 
-        cat << EOF > /opt/warp-go/warp.conf
+        cat <<EOF >/opt/warp-go/warp.conf
 [Account]
 Device = $device_id
 PrivateKey = $private_key
@@ -1025,16 +1025,16 @@ EOF
     fi
 
     sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
-    
+
     #if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
-        #wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
-        #chmod +x /opt/warp-go/warp.conf
+    #wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
+    #chmod +x /opt/warp-go/warp.conf
     #else
-        # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
-        #until [[ -e /opt/warp-go/warp.conf ]]; do
-            #yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
-            #/opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
-        #done
+    # 利用 WARP-GO 注册 CloudFlare WARP 账户，直到配置文件生成为止
+    #until [[ -e /opt/warp-go/warp.conf ]]; do
+    #yellow "正在向 CloudFlare WARP 注册账号, 如出现 Success 即为注册成功"
+    #/opt/warp-go/warp-go --register --config=/opt/warp-go/warp.conf
+    #done
     #fi
 
     # 设置 WARP-GO 的配置文件
@@ -1657,9 +1657,9 @@ wgcf_account() {
         # 询问用户是否使用自定义设备名称，如未使用则使用 WGCF 随机生成的六位设备名
         read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
         if [[ -n $device_name ]]; then
-            wgcf update --name $(echo $device_name | sed s/[[:space:]]/_/g) > /etc/wireguard/info.log 2>&1
+            wgcf update --name $(echo $device_name | sed s/[[:space:]]/_/g) >/etc/wireguard/info.log 2>&1
         else
-            wgcf update > /etc/wireguard/info.log 2>&1
+            wgcf update >/etc/wireguard/info.log 2>&1
         fi
 
         # 生成新的 WireGuard 配置文件
@@ -1668,8 +1668,8 @@ wgcf_account() {
         # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 文件中对应的内容
         private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
         private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
-        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf
+        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf
 
         # 启动 WGCF，并检查 WGCF 是否启动成功
         check_wgcf
@@ -1698,10 +1698,10 @@ wgcf_account() {
                 # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
                 private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
                 private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
-                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
-                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
-                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf;
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf
+                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
+                sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf
 
                 # 启动 WGCF，并检查 WGCF 是否启动成功
                 check_wgcf
@@ -1717,25 +1717,24 @@ wgcf_account() {
             if [[ -n $teams_token ]]; then
                 # 生成 WireGuard 公私钥及 WARP 设备 ID 和 FCM Token
                 private_key=$(wg genkey)
-                public_key=$(wg pubkey <<< "$private_key")
+                public_key=$(wg pubkey <<<"$private_key")
                 install_id=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
                 fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 134)"
 
                 # 使用 CloudFlare API 申请 Teams 配置信息
                 team_result=$(curl --silent --location --tlsv1.3 --request POST 'https://api.cloudflareclient.com/v0a2158/reg' \
-                --header 'User-Agent: okhttp/3.12.1' \
-                --header 'CF-Client-Version: a-6.10-2158' \
-                --header 'Content-Type: application/json' \
-                --header "Cf-Access-Jwt-Assertion: ${TEAM_TOKEN}" \
-                --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
+                    --header 'User-Agent: okhttp/3.12.1' \
+                    --header 'CF-Client-Version: a-6.10-2158' \
+                    --header 'Content-Type: application/json' \
+                    --header "Cf-Access-Jwt-Assertion: ${TEAM_TOKEN}" \
+                    --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
 
                 # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
                 private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
-
-                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-                sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf.conf;
-                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
-                sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf;
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf
+                sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf.conf
+                sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
+                sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf
 
                 # 启动 WGCF，并检查 WGCF 是否启动成功
                 check_wgcf
@@ -1763,8 +1762,8 @@ wgcf_account() {
         # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 文件中对应的内容
         private_v6=$(cat /etc/wireguard/wgcf-profile.conf | sed -n 4p | sed "s/Address = //g")
         private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
-        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf;
-        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf;
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf.conf
+        sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf.conf
 
         # 启动 WGCF，并检查 WGCF 是否启动成功
         check_wgcf
@@ -1787,7 +1786,7 @@ wpgo_account() {
     [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo4
     [[ -z $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo5
     [[ -n $lan4 && -n $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo6
-    [[ -n $lan4 && -n $out4 && -z $lan6 && -z $out6 ]] && current_postip=$wgo6
+    [[ -n $lan4 && -z $out4 && -n $lan6 && -n $out6 ]] && current_postip=$wgo6
 
     yellow "请选择需要切换的 WARP 账户类型"
     echo ""
@@ -1833,7 +1832,7 @@ wpgo_account() {
             # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
             check_endpoint
             sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
-            
+
             # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
             check_wpgo
         else
@@ -1858,7 +1857,7 @@ wpgo_account() {
             # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
             check_endpoint
             sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
-            
+
             # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
             check_wpgo
         fi
@@ -1877,6 +1876,7 @@ wpgo_account() {
 
             # 使用 Teams TOKEN 升级配置文件
             /opt/warp-go/warp-go --update --config=/opt/warp-go/warp.conf --team-config=$teams_token --device-name=$device_name
+            sed -i "s/Type =.*/Type = team/g" /opt/warp-go/warp.conf
 
             # 应用 WARP-GO 配置
             sed -i "s#.*AllowedIPs.*#$current_allowips#g" /opt/warp-go/warp.conf
@@ -1889,7 +1889,7 @@ wpgo_account() {
             # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
             check_endpoint
             sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
-            
+
             # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
             check_wpgo
         else
@@ -1902,7 +1902,7 @@ wpgo_account() {
 
         # 删除原来的配置文件，并重新注册
         rm -f /opt/warp-go/warp.conf
-        
+
         wget https://api.zeroteam.top/warp?format=warp-go -O /opt/warp-go/warp.conf
         chmod +x /opt/warp-go/warp.conf
 
@@ -1917,7 +1917,7 @@ wpgo_account() {
         # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
         check_endpoint
         sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "s/162.159.*/$best_endpoint/g" /opt/warp-go/warp.conf
-            
+
         # 启动 WARP-GO，并检测 WARP-GO 是否正常运行
         check_wpgo
     fi
@@ -1984,9 +1984,9 @@ wireproxy_account() {
         # 询问用户是否使用自定义设备名称，如未使用则使用 WGCF 随机生成的六位设备名
         read -rp "请输入自定义设备名，如未输入则使用默认随机设备名: " device_name
         if [[ -n $device_name ]]; then
-            wgcf update --name $(echo $device_name | sed s/[[:space:]]/_/g) > /etc/wireguard/info.log 2>&1
+            wgcf update --name $(echo $device_name | sed s/[[:space:]]/_/g) >/etc/wireguard/info.log 2>&1
         else
-            wgcf update > /etc/wireguard/info.log 2>&1
+            wgcf update >/etc/wireguard/info.log 2>&1
         fi
 
         # 生成新的 WireGuard 配置文件
@@ -1994,7 +1994,7 @@ wireproxy_account() {
 
         # 获取私钥以及 IPv6 内网地址，用于替换 proxy.conf 文件中对应的内容
         private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
-        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
 
         # 启动 WireProxy，并检查是否正常运行
         yellow "正在启动 WireProxy-WARP 代理模式"
@@ -2041,9 +2041,9 @@ wireproxy_account() {
             # 获取私钥以及 IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
             private_key=$(expr "$teams_config" : '.*private_key&quot;>\([^<]*\).*')
             private_v6=$(expr "$teams_config" : '.*v6&quot;:&quot;\([^[&]*\).*')
-            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
-            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf;
-            sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf;
+            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
+            sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
+            sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf
 
             # 启动 WireProxy，并检查是否正常运行
             yellow "正在启动 WireProxy-WARP 代理模式"
@@ -2094,7 +2094,7 @@ wireproxy_account() {
 
         # 获取私钥，用于替换 proxy.conf 文件中对应的内容
         private_key=$(grep PrivateKey /etc/wireguard/wgcf-profile.conf | sed "s/PrivateKey = //g")
-        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf;
+        sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/proxy.conf
 
         # 启动 WireProxy，并检查是否正常运行
         yellow "正在启动 WireProxy-WARP 代理模式"
@@ -2284,8 +2284,8 @@ before_showinfo() {
     [[ $netflix_wireproxy == "您的出口IP完整解锁Netflix，支持非自制剧的观看" ]] && netflix_wireproxy="${GREEN}已解锁 Netflix${PLAIN}"
     [[ $netflix_cli == "您的出口IP可以使用Netflix，但仅可看Netflix自制剧" ]] && netflix_cli="${YELLOW}Netflix 自制剧${PLAIN}"
     [[ $netflix_wireproxy == "您的出口IP可以使用Netflix，但仅可看Netflix自制剧" ]] && netflix_wireproxy="${YELLOW}Netflix 自制剧${PLAIN}"
-    [[ $netflix_cli =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]]&& netflix_cli="${RED}无法解锁 Netflix${PLAIN}"
-    [[ $netflix_wireproxy =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]]&& netflix_wireproxy="${RED}无法解锁 Netflix${PLAIN}"
+    [[ $netflix_cli =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]] && netflix_cli="${RED}无法解锁 Netflix${PLAIN}"
+    [[ $netflix_wireproxy =~ "Netflix在您的出口IP所在的国家不提供服务"|"Netflix在您的出口IP所在的国家提供服务，但是您的IP疑似代理，无法正常使用服务" ]] && netflix_wireproxy="${RED}无法解锁 Netflix${PLAIN}"
 
     # 测试 ChatGPT 解锁情况
     curl -s4m8 https://chat.openai.com/ | grep -qw "Sorry, you have been blocked" && chatgpt4="${RED}无法访问 ChatGPT${PLAIN}" || chatgpt4="${GREEN}支持访问 ChatGPT${PLAIN}"
