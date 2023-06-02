@@ -92,8 +92,10 @@ elif [[ $account_type == 3 ]]; then
 
       # 提取 WARP IPv6 内网地址，用于替换 wgcf-profile.conf 文件中对应的内容
       private_v6=$(expr "$team_result" : '.*"v6":[ ]*"\([^"]*\).*')
+      
       sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" wgcf-profile.conf;
       sed -i "s#Address.*128#Address = $private_v6#g" wgcf-profile.conf;
+    fi
   fi
 else
   ./wgcf generate
