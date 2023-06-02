@@ -1046,7 +1046,7 @@ EOF
 
     # 优选 EndPoint IP，并应用至 WARP-GO 配置文件
     check_endpoint
-    sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && "/Endpoint/s/.*/Endpoint = '"$best_endpoint"'/" /opt/warp-go/warp.conf
+    sed -i "/Endpoint6/d" /opt/warp-go/warp.conf && sed -i "/Endpoint/s/.*/Endpoint = '"$best_endpoint"'/" /opt/warp-go/warp.conf
 
     # 设置 WARP-GO 系统服务
     cat <<EOF >/lib/systemd/system/warp-go.service
