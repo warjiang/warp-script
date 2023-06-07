@@ -1666,6 +1666,9 @@ wgcf_account() {
                 sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
                 sed -i "s#Address.*128#Address = $private_v6#g" /etc/wireguard/wgcf-profile.conf
 
+                # 写入 log 文件，以用来给脚本判断是否为 Teams 账户
+                echo "wgcf-teams" > /etc/wireguard/info.log
+
                 # 启动 WGCF，并检查 WGCF 是否启动成功
                 check_wgcf
             else
@@ -1996,6 +1999,9 @@ wireproxy_account() {
                 sed -i "s#PrivateKey.*#PrivateKey = $private_key#g" /etc/wireguard/wgcf-profile.conf
                 sed -i "s#Address.*128#Address = $private_v6/128#g" /etc/wireguard/wgcf-profile.conf
 
+                # 写入 log 文件，以用来给脚本判断是否为 Teams 账户
+                echo "wgcf-teams" > /etc/wireguard/info.log
+
                 # 启动 WireProxy，并检查是否正常运行
                 check_wireproxy
             else
@@ -2129,8 +2135,16 @@ before_showinfo() {
             account4="${GREEN}WARP Teams${PLAIN}"
         fi
     elif [[ $warp_v4 == "on" ]]; then
-        quota4="${RED}无限制${PLAIN}"
-        account4="${YELLOW}WARP 免费账户${PLAIN}"
+        if [[ -n $(grep 'wgcf-teams' /etc/wireguard/info.log) ]]; then
+            quota4="${GREEN} $QUOTA ${PLAIN}"
+            account4="${GREEN}WARP+${PLAIN}"
+        elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "teams" ]]; then
+            quota4="${GREEN} $QUOTA ${PLAIN}"
+            account4="${GREEN}WARP Teams${PLAIN}"
+        else
+            quota4="${RED}无限制${PLAIN}"
+            account4="${YELLOW}WARP 免费账户${PLAIN}"
+        fi
     else
         quota4="${RED}无限制${PLAIN}"
         account4="${RED}未启用WARP${PLAIN}"
@@ -2151,8 +2165,16 @@ before_showinfo() {
             account6="${GREEN}WARP Teams${PLAIN}"
         fi
     elif [[ $warp_v6 == "on" ]]; then
-        quota6="${RED}无限制${PLAIN}"
-        account6="${YELLOW}WARP 免费账户${PLAIN}"
+        if [[ -n $(grep 'wgcf-teams' /etc/wireguard/info.log) ]]; then
+            quota6="${GREEN} $QUOTA ${PLAIN}"
+            account6="${GREEN}WARP+${PLAIN}"
+        elif [[ $(grep -s "Type" /opt/warp-go/warp.conf | cut -d= -f2 | sed "s# ##g") == "teams" ]]; then
+            quota6="${GREEN} $QUOTA ${PLAIN}"
+            account6="${GREEN}WARP Teams${PLAIN}"
+        else
+            quota6="${RED}无限制${PLAIN}"
+            account6="${YELLOW}WARP 免费账户${PLAIN}"
+        fi
     else
         quota6="${RED}无限制${PLAIN}"
         account6="${RED}未启用WARP${PLAIN}"
@@ -2182,8 +2204,13 @@ before_showinfo() {
             account_wireproxy="${GREEN}WARP Teams${PLAIN}"
         fi
     elif [[ $account_wireproxy == "on" ]]; then
-        quota_wireproxy="${RED}无限制${PLAIN}"
-        account_wireproxy="${YELLOW}WARP 免费账户${PLAIN}"
+        if [[ -n $(grep 'wgcf-teams' /etc/wireguard/info.log) ]]; then
+            quota_wireproxy="${RED}无限制${PLAIN}"
+            account_wireproxy="${GREEN}WARP Teams${PLAIN}"
+        else
+            quota_wireproxy="${RED}无限制${PLAIN}"
+            account_wireproxy="${YELLOW}WARP 免费账户${PLAIN}"
+        fi
     else
         quota_wireproxy="${RED}无限制${PLAIN}"
         account_wireproxy="${RED}未启动${PLAIN}"
