@@ -77,6 +77,8 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/wa
 wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/warp-yxip.sh && bash warp-yxip.sh
 ```
 
+安卓 Termux 如无 wget 请使用以下命令安装：`pkg update && pkg install wget`
+
 苹果 iSH 初始命令：`apk add -f openssh bash wget`，如遇更新包卡着不动输入以下命令：`sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories`
 
 ## 鸣谢项目
@@ -85,8 +87,7 @@ wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-yxip/wa
 * CloudFlare WARP：https://one.one.one.one/
 * Wgcf：https://github.com/ViRb3/wgcf
 * WARP-GO：https://gitlab.com/ProjectWARP/warp-go
-* 某匿名大佬的 CloudFlare WARP EndPoint IP 优选工具
-* Zero Cloud 的 WARP API
+* 某匿名大佬的 CloudFlare WARP EndPoint IP 优选工具及 WARP API
 
 ## 赞助
 
