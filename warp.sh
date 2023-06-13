@@ -1689,7 +1689,7 @@ wgcf_account() {
                     --header 'User-Agent: okhttp/3.12.1' \
                     --header 'CF-Client-Version: a-6.10-2158' \
                     --header 'Content-Type: application/json' \
-                    --header "Cf-Access-Jwt-Assertion: ${TEAM_TOKEN}" \
+                    --header "Cf-Access-Jwt-Assertion: ${teams_token}" \
                     --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
 
                 # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
@@ -2018,7 +2018,7 @@ wireproxy_account() {
                     --header 'User-Agent: okhttp/3.12.1' \
                     --header 'CF-Client-Version: a-6.10-2158' \
                     --header 'Content-Type: application/json' \
-                    --header "Cf-Access-Jwt-Assertion: ${TEAM_TOKEN}" \
+                    --header "Cf-Access-Jwt-Assertion: ${teams_token}" \
                     --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"Linux","serial_number":"'${install_id}'","locale":"zh_CN"}')
 
                 # 提取 WARP IPv6 内网地址，用于替换 wgcf.conf 和 wgcf-profile.conf 文件中对应的内容
