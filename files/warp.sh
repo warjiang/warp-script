@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# 环境变量，用于在 Debian 或 Ubuntu 操作系统中设置非交互式（noninteractive）安装模式
+
+export DEBIAN_FRONTEND=noninteractive
+
+# 彩色文字
 RED="\033[31m"
 GREEN="\033[32m"
 YELLOW="\033[33m"
@@ -17,6 +22,7 @@ yellow() {
     echo -e "\033[33m\033[01m$1\033[0m"
 }
 
+# 多方式判断操作系统，如非支持的操作系统，则退出脚本
 REGEX=("debian" "ubuntu" "centos|red hat|kernel|oracle linux|alma|rocky" "'amazon linux'" "fedora" "alpine")
 RELEASE=("Debian" "Ubuntu" "CentOS" "CentOS" "Fedora" "Alpine")
 PACKAGE_UPDATE=("apt-get update" "apt-get update" "yum -y update" "yum -y update" "yum -y update" "apk update -f")
@@ -91,8 +97,8 @@ archAffix() {
 
 # 检测 VPS 的出站 IP
 check_ip() {
-    ipv4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*ip\":[ ]*\"\([^"]*\).*')
-    ipv6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*ip\":[ ]*\"\([^"]*\).*')
+    ipv4=$(curl -s4m8 ip.p3terx.com -k | sed -n 1p)
+    ipv6=$(curl -s6m8 ip.p3terx.com -k | sed -n 1p)
 }
 
 # 检测 VPS 的 IP 形式
@@ -1680,9 +1686,9 @@ wgcf_account() {
             if [[ -n $teams_token ]]; then
                 # 生成 WireGuard 公私钥及 WARP 设备 ID 和 FCM Token
                 private_key=$(wg genkey)
-                public_key=$(wg pubkey <<<"$private_key")
-                install_id=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
-                fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 134)"
+                public_key=$(wg pubkey <<< "$private_key")
+                install_id=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 22)
+                fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 134)"
 
                 # 使用 CloudFlare API 申请 Teams 配置信息
                 team_result=$(curl --silent --location --tlsv1.3 --request POST 'https://api.cloudflareclient.com/v0a2158/reg' \
@@ -2009,9 +2015,9 @@ wireproxy_account() {
             if [[ -n $teams_token ]]; then
                 # 生成 WireGuard 公私钥及 WARP 设备 ID 和 FCM Token
                 private_key=$(wg genkey)
-                public_key=$(wg pubkey <<<"$private_key")
-                install_id=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
-                fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 134)"
+                public_key=$(wg pubkey <<< "$private_key")
+                install_id=$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 22)
+                fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' < /dev/urandom | head -c 134)"
 
                 # 使用 CloudFlare API 申请 Teams 配置信息
                 team_result=$(curl --silent --location --tlsv1.3 --request POST 'https://api.cloudflareclient.com/v0a2158/reg' \
@@ -2083,10 +2089,10 @@ before_showinfo() {
 
     # 获取出站 IPv4 / IPv6 的地址、提供商
     check_ip
-    country4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
-    country6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*country\":[ ]*\"\([^"]*\).*')
-    provider4=$(expr "$(curl -ks4m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
-    provider6=$(expr "$(curl -ks6m8 -A Mozilla https://api.ip.sb/geoip)" : '.*isp\":[ ]*\"\([^"]*\).*')
+    country4=$(curl -s4m8 ip.p3terx.com | sed -n 2p | awk -F "/ " '{print $2}')
+    country6=$(curl -s6m8 ip.p3terx.com | sed -n 2p | awk -F "/ " '{print $2}')
+    provider4=$(curl -s4m8 ip.p3terx.com | sed -n 3p | awk -F "/ " '{print $2}')
+    provider6=$(curl -s6m8 ip.p3terx.com | sed -n 3p | awk -F "/ " '{print $2}')
 
     # 获取出站 WARP 账户状态
     check_warp
@@ -2102,15 +2108,15 @@ before_showinfo() {
     # 如获取到 WARP-Cli 和 WireProxy 的 socks5 端口，则获取其的 IP 的地址、提供商、WARP状态信息
     if [[ -n $cli_port ]]; then
         account_cli=$(curl -sx socks5h://localhost:$cli_port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-        country_cli=$(expr "$(curl -sx socks5h://localhost:$cli_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*country\":[ ]*\"\([^"]*\).*')
-        ip_cli=$(expr "$(curl -sx socks5h://localhost:$cli_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*ip\":[ ]*\"\([^"]*\).*')
-        provider_cli=$(expr "$(curl -sx socks5h://localhost:$cli_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*isp\":[ ]*\"\([^"]*\).*')
+        country_cli=$(curl -sx socks5h://localhost:$cli_port ip.p3terx.com -k --connect-timeout 8 | sed -n 2p | awk -F "/ " '{print $2}')
+        ip_cli=$(curl -sx socks5h://localhost:$cli_port ip.p3terx.com -k --connect-timeout 8 | sed -n 1p)
+        provider_cli=$(curl -sx socks5h://localhost:$cli_port ip.p3terx.com -k --connect-timeout 8 | sed -n 3p | awk -F "/ " '{print $2}')
     fi
     if [[ -n $wireproxy_port ]]; then
         account_wireproxy=$(curl -sx socks5h://localhost:$wireproxy_port https://www.cloudflare.com/cdn-cgi/trace -k --connect-timeout 8 | grep warp | cut -d= -f2)
-        country_wireproxy=$(expr "$(curl -sx socks5h://localhost:$wireproxy_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*country\":[ ]*\"\([^"]*\).*')
-        ip_wireproxy=$(expr "$(curl -sx socks5h://localhost:$wireproxy_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*ip\":[ ]*\"\([^"]*\).*')
-        provider_wireproxy=$(expr "$(curl -sx socks5h://localhost:$wireproxy_port -A Mozilla https://api.ip.sb/geoip -k --connect-timeout 8)" : '.*isp\":[ ]*\"\([^"]*\).*')
+        country_wireproxy=$(curl -sx socks5h://localhost:$wireproxy_port ip.p3terx.com -k --connect-timeout 8 | sed -n 2p | awk -F "/ " '{print $2}')
+        ip_wireproxy=$(curl -sx socks5h://localhost:$wireproxy_port ip.p3terx.com -k --connect-timeout 8 | sed -n 1p)
+        provider_wireproxy=$(curl -sx socks5h://localhost:$wireproxy_port ip.p3terx.com -k --connect-timeout 8 | sed -n 3p | awk -F "/ " '{print $2}')
     fi
 
     # 获取 WARP 账户状态、设备名称和剩余流量，并返回至用户回显
