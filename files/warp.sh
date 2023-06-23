@@ -70,9 +70,9 @@ wg3="sed -i 's/1.1.1.1/1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4,2606:4700:4700::1111,2606
 wg4="sed -i 's/1.1.1.1/2606:4700:4700::1111,2606:4700:4700::1001,2001:4860:4860::8888,2001:4860:4860::8844,1.1.1.1,1.0.0.1,8.8.8.8,8.8.4.4/g' /etc/wireguard/wgcf.conf"
 
 # 设置允许外部 IP 访问
-wg5='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                                                # IPv4
-wg6='sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                      # IPv6
-wg7='sed -i "s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
+wg5='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                                                    # IPv4
+wg6='sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf'                                                                                                                                                                                                                                                                                          # IPv6
+wg7='sed -i "7 s/^/PostUp = ip -4 rule add from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -4 rule delete from $(ip route get 1.1.1.1 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostUp = ip -6 rule add from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf && sed -i "7 s/^/PostDown = ip -6 rule delete from $(ip route get 2606:4700:4700::1111 | grep -oP '"'src \K\S+') lookup main\n/"'" /etc/wireguard/wgcf.conf' # 双栈
 
 # 设置 WARP-GO 配置文件的监听 IP
 wgo1='sed -i "s#.*AllowedIPs.*#AllowedIPs = 0.0.0.0/0#g" /opt/warp-go/warp.conf'      # IPv4
@@ -363,7 +363,7 @@ check_endpoint() {
 
         # 如未有 IPv4 则使用 IPv6 的 Endpoint IP，如有 IPv4 则使用 IPv4 Endpoint IP
         if [[ -z $ipv4 ]]; then
-            best_endpoint="[2606:4700:d0::a29f:c001]:2408"
+            best_endpoint="[2606:4700:4700::1111]:2408"
         else
             best_endpoint="162.159.193.10:2408"
         fi
@@ -1319,7 +1319,7 @@ install_wireproxy() {
     fi
 
     # 应用 WireProxy 配置文件，并将 WGCF 配置文件移至 /etc/wireguard 文件夹，以备安装 WGCF-WARP 使用
-    cat <<EOF >/etc/wireguard/proxy.conf
+    cat << EOF >/etc/wireguard/proxy.conf
 [Interface]
 Address = 172.16.0.2/32
 MTU = $MTU
@@ -1335,7 +1335,7 @@ EOF
     mv -f wgcf-account.toml /etc/wireguard/wgcf-account.toml
 
     # 设置 WireProxy 系统服务
-    cat <<'TEXT' >/etc/systemd/system/wireproxy-warp.service
+    cat << 'TEXT' >/etc/systemd/system/wireproxy-warp.service
 [Unit]
 Description=CloudFlare WARP Socks5 proxy mode based for WireProxy, script by Misaka-blog
 After=network.target
