@@ -8,20 +8,12 @@ ppkeys = requests.get('https://gitlab.com/Misaka-blog/warp-script/-/raw/main/fil
 pkeys = ppkeys.content.decode('UTF8')
 keys = pkeys.split(',')
 gkeys = []
-os.system('cls' if os.name == "nt" else 'clear')
-
-print("\n█░█░█ ▄▀█ █▀█ █▀█ ▄█▄\n▀▄▀▄▀ █▀█ █▀▄ █▀▀ ░▀░\n")
-print("Generates keys for WARP+ with huge bandwidth")
-print()
 
 value_int = int(input("Input the number of key(s) that you want for WARP+\n>"))
 a = 0
 
 while a < value_int:
   a += 1
-  print("\n<--- Generating the WARP+ key(s) --->")
-  print("The WARP+ key have been generated, the key number is", a,
-        "of total requested key.", "\n")
 
   try:
     headers = {
@@ -72,7 +64,7 @@ while a < value_int:
 
       client.delete(f"/reg/{id}", headers=headers_get)
       gkeys.append(license)
-      print(f"License Key:{license}\nData Count: {referral_count} of GB(s)")
+      print(f"License Key: {license}\nData Count: {referral_count} of GB(s)")
 
   except:
     print("Error occurred.")
