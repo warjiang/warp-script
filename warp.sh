@@ -228,6 +228,7 @@ check_endpoint() {
     # 根据 VPS 的出站 IP 情况，生成对应的优选 Endpoint IP 段列表
     check_ip
 
+    # 生成优选 Endpoint IP 文件
     if [[ -n $ipv4 ]]; then
         n=0
         iplist=100
@@ -243,6 +244,11 @@ check_endpoint() {
                 break
             fi
             temp[$n]=$(echo 162.159.195.$(($RANDOM % 256)))
+            n=$(($n + 1))
+            if [ $n -ge $iplist ]; then
+                break
+            fi
+            temp[$n]=$(echo 162.159.204.$(($RANDOM % 256)))
             n=$(($n + 1))
             if [ $n -ge $iplist ]; then
                 break
@@ -285,6 +291,12 @@ check_endpoint() {
                 break
             else
                 temp[$n]=$(echo 162.159.195.$(($RANDOM % 256)))
+                n=$(($n + 1))
+            fi
+            if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+                break
+            else
+                temp[$n]=$(echo 162.159.204.$(($RANDOM % 256)))
                 n=$(($n + 1))
             fi
             if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then

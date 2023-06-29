@@ -17,6 +17,7 @@ yellow() {
     echo -e "\033[33m\033[01m$1\033[0m"
 }
 
+# 选择客户端 CPU 架构
 archAffix(){
     case "$(uname -m)" in
         i386 | i686 ) echo '386' ;;
@@ -68,6 +69,11 @@ endpoint4(){
         if [ $n -ge $iplist ]; then
             break
         fi
+        temp[$n]=$(echo 162.159.204.$(($RANDOM % 256)))
+        n=$(($n + 1))
+        if [ $n -ge $iplist ]; then
+            break
+        fi
         temp[$n]=$(echo 188.114.96.$(($RANDOM % 256)))
         n=$(($n + 1))
         if [ $n -ge $iplist ]; then
@@ -106,6 +112,12 @@ endpoint4(){
             break
         else
             temp[$n]=$(echo 162.159.195.$(($RANDOM % 256)))
+            n=$(($n + 1))
+        fi
+        if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
+            break
+        else
+            temp[$n]=$(echo 162.159.204.$(($RANDOM % 256)))
             n=$(($n + 1))
         fi
         if [ $(echo ${temp[@]} | sed -e 's/ /\n/g' | sort -u | wc -l) -ge $iplist ]; then
