@@ -80,11 +80,11 @@ select_wgwarp(){
     echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 WireGuard-WARP 双栈模式"
     echo ""
     read -p "请输入选项 [1-3]: " wgwarp_mode
-    if [ "$wgwarp_mode" = "1" ]; then
+    if [ $wgwarp_mode = 1 ]; then
         install_wgwarp_ipv4
-    elif [ "$wgwarp_mode" = "2" ]; then
+    elif [ $wgwarp_mode = 2 ]; then
         install_wgwarp_ipv6
-    elif [ "$wgwarp_mode" = "3" ]; then
+    elif [ $wgwarp_mode = 3 ]; then
         install_wgwarp_dual
     else
         red "输入错误，请重新输入"
@@ -132,19 +132,36 @@ install_wgwarp(){
     warp_acc_register
 }
 
-warp_key(){
+warp_tool(){
+    yellow "请选择需要使用的工具"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 获取 WARP+ Key ${YELLOW}(默认推荐)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 刷 WARP+ 账户流量 ${RED}(效率较低)${PLAIN}"
+    echo ""
+    read -p "请输入选项 [1-2]: " tool_choice
+    if [[ $tool_choice == 2 ]]; then
+
+    else
+        warp_keygen
+    fi
+}
+
+warp_keygen(){
     # 检测 python3 和 pip3 是否安装，如未安装则安装
     [[ -z $(type -P python3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3 || ${PACKAGE_INSTALL[int]} python3
 
     # 下载生成器文件及依赖安装文件
-    wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/test/main2.py -O keys.py
-    wget -N 
+    wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/24pbgen/main.py
+    wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/24pbgen/requirements.txt
+
+    # 安装依赖
+    pip3 install -r requirements.txt
 
     # 运行程序，并输出结果
-    python3 keys.py
+    python3 main.py
 
     # 删除文件
-    rm -f keys.py
+    rm -f main.py
 }
 
 menu() {
@@ -173,7 +190,8 @@ menu() {
     echo ""
     read -rp "请输入选项 [0-6]: " menu_input
     case $menu_input in
-        *) exit 1 ;;
+        5 ) warp_tool ;;
+        * ) exit 1 ;;
     esac
 }
 
