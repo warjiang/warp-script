@@ -140,7 +140,7 @@ warp_tool(){
     echo ""
     read -p "请输入选项 [1-2]: " tool_choice
     if [[ $tool_choice == 2 ]]; then
-
+        echo "ok"
     else
         warp_keygen
     fi
@@ -195,4 +195,4 @@ menu() {
     esac
 }
 
-before_showinfo && menu
+menu
