@@ -43,32 +43,123 @@ for ((int = 0; int < ${#REGEX[@]}; int++)); do
     fi
 done
 
-[[ -z $SYSTEM ]] && red "不支持当前VPS系统, 请使用主流的操作系统" && exit 1
+[[ -z $SYSTEM ]] && red "不支持当前 VPS 的操作系统, 请使用主流的操作系统" && exit 1
 
-# 检测并安装依赖
-check_depend(){
-    # 非 CentOS 系系统，执行软件包更新
-    [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]}
+# 注册 WARP 账户
+warp_acc_register(){
+    if [[ $(type -P wg) ]]; then
+        private_key=$(wg genkey)
+        public_key=$(wg pubkey <<< "$private_key")
+    else
+        wg_api=$(curl -sSL https://wg.cloudflare.now.cc)
+        private_key=$(echo "$wg_api" | awk 'NR==2 {print $2}')
+        public_key=$(echo "$wg_api" | awk 'NR==1 {print $2}')
+    fi
 
-    # 安装相应依赖
-    [[ -z $(type -P curl) ]] && ${PACKAGE_INSTALL[int]} curl
-    [[ -z $(type -P wget) ]] && ${PACKAGE_INSTALL[int]} wget
-    [[ -z $(type -P sudo) ]] && ${PACKAGE_INSTALL[int]} sudo
-    [[ -z $(type -P python3) ]] && ${PACKAGE_INSTALL[int]} python3
-    [[ -z $(type -P qrencode) ]] && ${PACKAGE_INSTALL[int]} qrencode
+    install_id=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 22)
+    fcm_token="${install_id}:APA91b$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 134)"
+
+    curl --request POST 'https://api.cloudflareclient.com/v0a2158/reg' \
+        --silent \
+        --location \
+        --tlsv1.3 \
+        --header 'User-Agent: okhttp/3.12.1' \
+        --header 'CF-Client-Version: a-6.10-2158' \
+        --header 'Content-Type: application/json' \
+        --header "Cf-Access-Jwt-Assertion: ${team_token}" \
+        --data '{"key":"'${public_key}'","install_id":"'${install_id}'","fcm_token":"'${fcm_token}'","tos":"'$(date +"%Y-%m-%dT%H:%M:%S.%3NZ")'","model":"PC","serial_number":"'${install_id}'","locale":"zh_CN"}' \
+    | python3 -m json.tool | sed "/\"account_type\"/i\        \"private_key\": \"$private_key\"" > warp-account.conf
 }
 
-# IPv4 出站状态检测
-ipv4_out_check(){
-    ipv4_out_ip=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep ip | cut -d= -f2)
-    ipv4_ip_country=$(curl -s4m8 ipget.net/country?ip="$ipv4_out_ip")
-    ipv4_warp_stat=$(curl -s4m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+# 安装 WireGuard WARP
+select_wgwarp(){
+    yellow "请选择 WireGuard 安装 / 切换的模式"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 WireGuard-WARP 单栈模式 ${YELLOW}(IPv4)${PLAIN}"
+    echo -e " ${GREEN}2.${PLAIN} 安装 / 切换 WireGuard-WARP 单栈模式 ${YELLOW}(IPv6)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 安装 / 切换 WireGuard-WARP 双栈模式"
+    echo ""
+    read -p "请输入选项 [1-3]: " wgwarp_mode
+    if [ "$wgwarp_mode" = "1" ]; then
+        install_wgwarp_ipv4
+    elif [ "$wgwarp_mode" = "2" ]; then
+        install_wgwarp_ipv6
+    elif [ "$wgwarp_mode" = "3" ]; then
+        install_wgwarp_dual
+    else
+        red "输入错误，请重新输入"
+        select_wgwarp
+    fi
 }
 
-# IPv6 出站状态检测
-ipv6_out_check(){
-    ipv6_out_ip=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep ip | cut -d= -f2)
-    ipv6_ip_country=$(curl -s6m8 ipget.net/country?ip="$ipv6_out_ip")
-    ipv6_warp_stat=$(curl -s6m8 https://www.cloudflare.com/cdn-cgi/trace -k | grep warp | cut -d= -f2)
+install_wgwarp(){
+    # 安装必需依赖
+    if [[ $SYSTEM == "Alpine" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget bash grep net-tools iproute2 openresolv openrc iptables ip6tables wireguard-tools
+    fi
+    if [[ $SYSTEM == "CentOS" ]]; then
+        ${PACKAGE_INSTALL[int]} epel-release
+        ${PACKAGE_INSTALL[int]} sudo curl wget unzip iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+        if [[ $OSID == 9 ]] && [[ -z $(type -P resolvconf) ]]; then
+            wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/resolvconf -O /usr/sbin/resolvconf
+            chmod +x /usr/sbin/resolvconf
+        fi
+    fi
+    if [[ $SYSTEM == "Fedora" ]]; then
+        ${PACKAGE_INSTALL[int]} sudo curl wget unzip iproute net-tools wireguard-tools iptables bc htop screen python3 iputils qrencode
+    fi
+    if [[ $SYSTEM == "Debian" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo wget curl unzip lsb-release bc htop screen python3 inetutils-ping qrencode
+        echo "deb http://deb.debian.org/debian $(lsb_release -sc)-backports main" | tee /etc/apt/sources.list.d/backports.list
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
+    fi
+    if [[ $SYSTEM == "Ubuntu" ]]; then
+        ${PACKAGE_UPDATE[int]}
+        ${PACKAGE_INSTALL[int]} sudo curl wget unzip lsb-release bc htop screen python3 inetutils-ping qrencode
+        ${PACKAGE_INSTALL[int]} --no-install-recommends net-tools iproute2 openresolv dnsutils wireguard-tools iptables
+    fi
+
+    # IPv4 only VPS 开启 IPv6 支持
+    if [[ $(sysctl -a | grep 'disable_ipv6.*=.*1') || $(cat /etc/sysctl.{conf,d/*} | grep 'disable_ipv6.*=.*1') ]]; then
+        sed -i '/disable_ipv6/d' /etc/sysctl.{conf,d/*}
+        echo 'net.ipv6.conf.all.disable_ipv6 = 0' >/etc/sysctl.d/ipv6.conf
+        sysctl -w net.ipv6.conf.all.disable_ipv6=0
+    fi
+
+    # 调用 API、注册 WARP 账户
+    warp_acc_register
 }
 
+menu() {
+    clear
+    echo "#############################################################"
+    echo -e "#                ${RED}CloudFlare WARP 一键管理脚本${PLAIN}               #"
+    echo -e "# ${GREEN}作者${PLAIN}: MisakaNo の 小破站                                  #"
+    echo -e "# ${GREEN}博客${PLAIN}: https://blog.misaka.rest                            #"
+    echo -e "# ${GREEN}GitHub 项目${PLAIN}: https://github.com/Misaka-blog               #"
+    echo -e "# ${GREEN}GitLab 项目${PLAIN}: https://gitlab.com/Misaka-blog               #"
+    echo -e "# ${GREEN}Telegram 频道${PLAIN}: https://t.me/misakanocchannel              #"
+    echo -e "# ${GREEN}Telegram 群组${PLAIN}: https://t.me/misakanoc                     #"
+    echo -e "# ${GREEN}YouTube 频道${PLAIN}: https://www.youtube.com/@misaka-blog        #"
+    echo "#############################################################"
+    echo ""
+    echo -e " ${GREEN}1.${PLAIN} 安装 / 切换 WireGuard-WARP"
+    echo -e " ${GREEN}2.${PLAIN} ${RED}卸载 WireGuard-WARP${PLAIN}"
+    echo " -------------"
+    echo -e " ${GREEN}3.${PLAIN} 启动、停止或重启 WARP"
+    echo -e " ${GREEN}4.${PLAIN} 切换 WARP 账户类型"
+    echo " -------------"
+    echo -e " ${GREEN}5.${PLAIN} 获取 WARP+ Key、刷流量"
+    echo -e " ${GREEN}6.${PLAIN} 从 GitLab 拉取最新脚本"
+    echo " -------------"
+    echo -e " ${GREEN}0.${PLAIN} 退出脚本"
+    echo ""
+    read -rp "请输入选项 [0-6]: " menu_input
+    case $menu_input in
+        *) exit 1 ;;
+    esac
+}
+
+before_showinfo && menu
