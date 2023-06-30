@@ -66,10 +66,10 @@ while a < value_int:
       gkeys.append(license)
 
   except:
-    print("Error occurred.")
+    print("生成失败，请重试！")
     time.sleep(15)
   if a % 2 == 0:
     time.sleep(60)
 
 for x in gkeys:
-  print("Key: " + x)
+  print("获取到的 WARP+ 密钥为：" + x)

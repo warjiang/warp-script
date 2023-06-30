@@ -132,6 +132,21 @@ install_wgwarp(){
     warp_acc_register
 }
 
+warp_key(){
+    # 检测 python3 和 pip3 是否安装，如未安装则安装
+    [[ -z $(type -P python3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3 || ${PACKAGE_INSTALL[int]} python3
+
+    # 下载生成器文件及依赖安装文件
+    wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/test/main2.py -O keys.py
+    wget -N 
+
+    # 运行程序，并输出结果
+    python3 keys.py
+
+    # 删除文件
+    rm -f keys.py
+}
+
 menu() {
     clear
     echo "#############################################################"
