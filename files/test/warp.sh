@@ -135,14 +135,18 @@ install_wgwarp(){
 warp_tool(){
     yellow "请选择需要使用的工具"
     echo ""
-    echo -e " ${GREEN}1.${PLAIN} 获取 WARP+ Key ${YELLOW}(默认推荐)${PLAIN}"
+    echo -e " ${GREEN}1.${PLAIN} 获取 WARP+ Key ${YELLOW}(推荐)${PLAIN}"
     echo -e " ${GREEN}2.${PLAIN} 刷 WARP+ 账户流量 ${RED}(效率较低)${PLAIN}"
+    echo -e " ${GREEN}3.${PLAIN} 提取配置文件 ${RED}(WireGuard 和 Sing-box)${PLAIN}"
     echo ""
-    read -p "请输入选项 [1-2]: " tool_choice
+    read -p "请输入选项 [1-3]: " tool_choice
     if [[ $tool_choice == 2 ]]; then
         warp_traffic
-    else
+    elif [[ $tool_choice == 1 ]]; then
         warp_keygen
+    else
+        red "输入错误，请重新输入"
+        warp_tool
     fi
 }
 
@@ -215,7 +219,7 @@ menu() {
     echo -e " ${GREEN}3.${PLAIN} 启动、停止或重启 WARP"
     echo -e " ${GREEN}4.${PLAIN} 切换 WARP 账户类型"
     echo " -------------"
-    echo -e " ${GREEN}5.${PLAIN} 获取 WARP+ Key、刷流量"
+    echo -e " ${GREEN}5.${PLAIN} 获取 WARP+ Key、刷流量及提取配置文件"
     echo -e " ${GREEN}6.${PLAIN} 从 GitLab 拉取最新脚本"
     echo " -------------"
     echo -e " ${GREEN}0.${PLAIN} 退出脚本"
