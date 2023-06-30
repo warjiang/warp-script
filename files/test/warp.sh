@@ -140,7 +140,7 @@ warp_tool(){
     echo ""
     read -p "请输入选项 [1-2]: " tool_choice
     if [[ $tool_choice == 2 ]]; then
-        echo "ok"
+        warp_traffic
     else
         warp_keygen
     fi
@@ -149,6 +149,7 @@ warp_tool(){
 warp_keygen(){
     # 检测 python3 和 pip3 是否安装，如未安装则安装
     [[ -z $(type -P python3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3 || [[ -z $(type -P python3) ]] && ${PACKAGE_INSTALL[int]} python3
+    [[ -z $(type -P pip3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3-pip || [[ -z $(type -P pip3) ]] && ${PACKAGE_INSTALL[int]} python3-pip
 
     # 下载生成器文件及依赖安装文件
     wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/24pbgen/main.py
@@ -162,6 +163,37 @@ warp_keygen(){
 
     # 删除文件
     rm -f main.py requirements.txt
+}
+
+warp_traffic() {
+    # 检测 screen 和 python3 是否安装，如未安装则安装
+    [[ -z $(type -P screen) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} screen || [[ -z $(type -P screen) ]] && ${PACKAGE_INSTALL[int]} screen
+    [[ -z $(type -P python3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3 || [[ -z $(type -P python3) ]] && ${PACKAGE_INSTALL[int]} python3
+
+    # 提醒用户如何获取 WARP 密钥，并且获取用户的密钥
+    yellow "获取自己的 CloudFlare WARP 账号信息方法: "
+    green "电脑: 下载并安装 CloudFlare WARP → 设置 → 偏好设置 → 复制设备ID到脚本中"
+    green "手机: 下载并安装 1.1.1.1 APP → 菜单 → 高级 → 诊断 → 复制设备ID到脚本中"
+    echo ""
+    yellow "请按照下面指示, 输入您的 CloudFlare WARP 账号信息:"
+    read -rp "请输入您的 WARP 设备 ID (36位字符): " license
+
+    # 利用正则表达式，检测格式是否正确。如不正确要求用户重新输入
+    until [[ $license =~ ^[A-F0-9a-f]{8}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{4}-[A-F0-9a-f]{12}$ ]]; do
+        red "设备 ID 输入格式输入错误，请重新输入！"
+        read -rp "请输入您的 WARP 设备 ID (36位字符): " license
+    done
+
+    # 下载刷流量脚本，并自动补充 WARP 密钥信息
+    wget -N --no-check-certificate https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/wp-plus.py
+    sed -i "27 s/[(][^)]*[)]//g" wp-plus.py && sed -i "27 s/input/'$license'/" wp-plus.py
+
+    # 询问用户 Screen 会话名称，及设置 Screen 会话
+    read -rp "请输入 Screen 会话名称 (默认为wp-plus): " screenname
+    [[ -z $screenname ]] && screenname="wp-plus"
+    screen -UdmS $screenname bash -c '/usr/bin/python3 /root/wp-plus.py'
+    green "创建刷 WARP+ 流量任务成功！ Screen 会话名称为：$screenname"
+    yellow "您可以使用 screen -r $screenname 查询脚本运行状态"
 }
 
 menu() {
