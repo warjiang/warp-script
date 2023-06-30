@@ -148,7 +148,7 @@ warp_tool(){
 
 warp_keygen(){
     # 检测 python3 和 pip3 是否安装，如未安装则安装
-    [[ -z $(type -P python3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3 || ${PACKAGE_INSTALL[int]} python3
+    [[ -z $(type -P python3) ]] && [[ ! $SYSTEM == "CentOS" ]] && ${PACKAGE_UPDATE[int]} && ${PACKAGE_INSTALL[int]} python3 || [[ -z $(type -P python3) ]] && ${PACKAGE_INSTALL[int]} python3
 
     # 下载生成器文件及依赖安装文件
     wget -N https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/24pbgen/main.py
@@ -161,7 +161,7 @@ warp_keygen(){
     python3 main.py
 
     # 删除文件
-    rm -f main.py
+    rm -f main.py requirements.txt
 }
 
 menu() {
