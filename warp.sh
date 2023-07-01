@@ -555,10 +555,30 @@ init_wgcf() {
 # 利用 WGCF 注册 CloudFlare WARP 账户
 register_wgcf() {
     if [[ $country4 == "Russia" || $country6 == "Russia" ]]; then
-        wget --no-check-certificate https://api.zeroteam.top/warp?format=wgcf -O wgcf.zip
-        unzip wgcf.zip
-        rm -f wgcf.zip
-        chmod +x wgcf-account.toml wgcf-profile.conf
+        # 下载 WARP API 工具
+        wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
+        chmod +x main-linux-$(archAffix)
+
+        # 运行 WARP API
+        arch=$(archAffix)
+        result_output=$(./main-linux-$arch)
+
+        # 获取设备 ID、私钥及 WARP TOKEN
+        device_id=$(echo "$result_output" | awk -F ': ' '/device_id/{print $2}')
+        private_key=$(echo "$result_output" | awk -F ': ' '/private_key/{print $2}')
+        warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
+        license_key=$(echo "$result_output" | awk -F ': ' '/license/{print $2}')
+
+        # 写入 WGCF 配置文件
+        cat <<EOF > warp-account.toml
+access_token = '$warp_token'
+device_id = '$device_id'
+license_key = '$license_key'
+private_key = '$private_key'
+EOF
+
+        # 删除 WARP API 工具
+        rm -f main-linux-$(archAffix)
     else
         # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
         if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
@@ -777,6 +797,7 @@ conf_wpgo() {
 
 # 利用 WARP API，注册 WARP 免费版账号并应用至 WARP-GO
 register_wpgo(){
+    # 下载 WARP API 工具
     wget https://gitlab.com/Misaka-blog/warp-script/-/raw/main/files/warp-api/main-linux-$(archAffix)
     chmod +x main-linux-$(archAffix)
 
@@ -1368,6 +1389,9 @@ uninstall_wireproxy() {
     # 关闭 WireProxy
     systemctl stop wireproxy-warp
     systemctl disable wireproxy-warp
+
+    # 卸载 WireGuard 依赖
+    ${PACKAGE_UNINSTALL[int]} wireguard-tools
 
     # 删除 WireProxy 程序文件
     rm -f /etc/systemd/system/wireproxy-warp.service /usr/local/bin/wireproxy /etc/wireguard/proxy.conf
