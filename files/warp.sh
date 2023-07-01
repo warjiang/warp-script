@@ -570,7 +570,7 @@ register_wgcf() {
         license_key=$(echo "$result_output" | awk -F ': ' '/license/{print $2}')
 
         # 写入 WGCF 配置文件
-        cat <<EOF > warp-account.toml
+        cat << EOF > wgcf-account.toml
 access_token = '$warp_token'
 device_id = '$device_id'
 license_key = '$license_key'
@@ -579,6 +579,9 @@ EOF
 
         # 删除 WARP API 工具
         rm -f main-linux-$(archAffix)
+
+        # 生成 WireGuard 配置文件
+        wgcf generate && chmod +x wgcf-profile.conf
     else
         # 如已注册 WARP 账户，则自动拉取。避免造成 CloudFlare 服务器负担
         if [[ -f /etc/wireguard/wgcf-account.toml ]]; then
@@ -811,7 +814,7 @@ register_wpgo(){
     warp_token=$(echo "$result_output" | awk -F ': ' '/token/{print $2}')
 
     # 写入 WARP-GO 配置文件
-    cat <<EOF >/opt/warp-go/warp.conf
+    cat << EOF > /opt/warp-go/warp.conf
 [Account]
 Device = $device_id
 PrivateKey = $private_key
@@ -827,6 +830,7 @@ Endpoint = 162.159.193.10:1701
 # AllowedIPs = ::/0
 KeepAlive = 30
 EOF
+    
     sed -i '0,/AllowedIPs/{/AllowedIPs/d;}' /opt/warp-go/warp.conf
     sed -i '/KeepAlive/a [Script]' /opt/warp-go/warp.conf
 
@@ -1080,7 +1084,7 @@ install_wpgo() {
     sed -i "/Endpoint/s/.*/Endpoint = "$best_endpoint"/" /opt/warp-go/warp.conf
 
     # 设置 WARP-GO 系统服务
-    cat <<EOF >/lib/systemd/system/warp-go.service
+    cat << EOF > /lib/systemd/system/warp-go.service
 [Unit]
 Description=warp-go service
 After=network.target
@@ -1352,7 +1356,7 @@ install_wireproxy() {
     fi
 
     # 应用 WireProxy 配置文件，并将 WGCF 配置文件移至 /etc/wireguard 文件夹，以备安装 WGCF-WARP 使用
-    cat <<EOF >/etc/wireguard/proxy.conf
+    cat << EOF > /etc/wireguard/proxy.conf
 [Interface]
 Address = 172.16.0.2/32
 MTU = $MTU
